@@ -1,0 +1,2691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MEETOR | AI 진로탐색 멘토링 플랫폼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<style>
+/* ════════════════════════════════════════════════════════
+   MEETOR Design Tokens
+   - 네이비/스카이블루 기조 유지 + 따뜻한 크림/민트 포인트 추가
+   - 학부모(신뢰), 학생(설렘), 학교(공식성) 균형
+   ════════════════════════════════════════════════════════ */
+:root {
+  /* Primary - 신뢰의 네이비/스카이 */
+  --sky:      #1A6FA8;
+  --sky-l:    #E8F4FC;
+  --sky-mid:  #B3D8F0;
+  --sky-deep: #0F4E7E;
+  --navy:     #1A3A5C;
+  --navy-l:   #EEF4FA;
+
+  /* Neutral */
+  --white:    #FFFFFF;
+  --cream:    #FDF8F0;          /* 따뜻한 포인트 */
+  --gray-50:  #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-600: #475569;
+  --gray-800: #1E293B;
+
+  /* Semantic */
+  --green:    #059669;
+  --green-l:  #ECFDF5;
+  --mint:     #14B8A6;          /* 학습/성장 포인트 */
+  --mint-l:   #F0FDFA;
+  --amber:    #D97706;
+  --amber-l:  #FFFBEB;
+  --red:      #DC2626;
+  --red-l:    #FEF2F2;
+  --purple:   #7C3AED;
+  --purple-l: #F5F3FF;
+  --warm:     #F59E0B;          /* 따뜻한 골드 (수료/공식) */
+  --warm-l:   #FEF3C7;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  font-family: "Noto Sans KR", system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: linear-gradient(180deg, var(--gray-100) 0%, var(--navy-l) 100%);
+  color: var(--gray-800);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 16px;
+}
+
+/* ── APP CONTAINER ── */
+.app {
+  width: 100%; max-width: 680px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(26,58,92,0.12), 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px;
+  background: var(--navy);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.logo-mark {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--sky) 0%, var(--sky-deep) 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 14px;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(26,111,168,0.4);
+}
+.logo-text { font-size: 16px; font-weight: 800; letter-spacing: 2.5px; color: var(--sky-mid); }
+.step-dots { margin-left: auto; display: flex; gap: 5px; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.2); transition: all .3s; }
+.dot.on { width: 18px; background: var(--sky-mid); }
+
+/* ── PROGRESS TRACK ── */
+.prog-track { display: flex; border-bottom: 1px solid var(--gray-200); overflow-x: auto; background: var(--gray-50); }
+.prog-track::-webkit-scrollbar { display: none; }
+.prog-step {
+  flex: 1; min-width: 70px; padding: 8px 4px;
+  text-align: center; font-size: 10px; font-weight: 500;
+  color: var(--gray-400); border-right: 1px solid var(--gray-200);
+  white-space: nowrap; transition: all .25s;
+}
+.prog-step:last-child { border-right: none; }
+.prog-step.done { background: var(--sky-l); color: var(--sky); font-weight: 600; }
+.prog-step.cur  { background: var(--navy); color: #fff; font-weight: 700; }
+
+/* ── SCREEN ── */
+.screen { display: none; flex-direction: column; min-height: 540px; }
+.screen.active { display: flex; }
+.screen-body { flex: 1; padding: 24px 24px 14px; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none} }
+.screen.active .screen-body > * { animation: fadeUp .32s ease both; }
+.screen.active .screen-body > *:nth-child(2) { animation-delay:.05s }
+.screen.active .screen-body > *:nth-child(3) { animation-delay:.10s }
+.screen.active .screen-body > *:nth-child(4) { animation-delay:.15s }
+.screen.active .screen-body > *:nth-child(5) { animation-delay:.20s }
+.screen.active .screen-body > *:nth-child(6) { animation-delay:.25s }
+
+/* ── TAG ── */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  padding: 4px 11px; border-radius: 20px; margin-bottom: 14px;
+}
+.tag i { font-size: 11px; }
+.tag-sky    { background: var(--sky-l);    color: var(--sky);    border: 1px solid var(--sky-mid); }
+.tag-amber  { background: var(--amber-l);  color: var(--amber);  border: 1px solid #FCD34D; }
+.tag-blue   { background: var(--navy-l);   color: var(--navy);   border: 1px solid #BFDBFE; }
+.tag-purple { background: var(--purple-l); color: var(--purple); border: 1px solid #C4B5FD; }
+.tag-green  { background: var(--green-l);  color: var(--green);  border: 1px solid #6EE7B7; }
+.tag-mint   { background: var(--mint-l);   color: var(--mint);   border: 1px solid #5EEAD4; }
+.tag-warm   { background: var(--warm-l);   color: var(--warm);   border: 1px solid #FDE68A; }
+
+.screen-title { font-size: 21px; font-weight: 700; margin-bottom: 6px; color: var(--navy); line-height: 1.35; letter-spacing: -0.3px; }
+.screen-sub   { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; line-height: 1.65; }
+
+/* ── FORM ── */
+label.field-label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 7px; letter-spacing: 0.2px; }
+.field { margin-bottom: 18px; }
+input[type=text], textarea, select {
+  width: 100%;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  font-size: 14px; color: var(--gray-800);
+  font-family: inherit; resize: none; outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+input[type=text]:focus, textarea:focus, select:focus {
+  border-color: var(--sky);
+  box-shadow: 0 0 0 3px rgba(26,111,168,0.12);
+  background: var(--white);
+}
+
+/* ── CHIPS ── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--gray-200);
+  font-size: 13px; cursor: pointer;
+  background: var(--white); color: var(--gray-600);
+  transition: all .15s;
+}
+.chip:hover { border-color: var(--sky); color: var(--sky); }
+.chip.sel { background: var(--sky-l); border-color: var(--sky); color: var(--sky); font-weight: 600; }
+.chip.dontknow.sel { background: var(--warm-l); border-color: var(--warm); color: var(--warm); }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  padding: 13px 18px;
+  background: var(--navy);
+  color: #fff; border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; width: 100%;
+  transition: all .18s; font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+}
+.btn-primary:hover { background: var(--sky); box-shadow: 0 6px 20px rgba(26,111,168,0.3); transform: translateY(-1px); }
+.btn-secondary {
+  padding: 12px 18px;
+  background: var(--white); color: var(--gray-600);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 14px; cursor: pointer; width: 100%;
+  transition: all .18s; font-family: inherit;
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+}
+.btn-secondary:hover { background: var(--gray-50); color: var(--navy); border-color: var(--gray-400); }
+
+/* ── MENTOR CARD ── */
+.mentor-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+  cursor: pointer; background: var(--white); transition: all .2s;
+}
+.mentor-card:hover { border-color: var(--sky); box-shadow: 0 4px 16px rgba(26,111,168,0.08); transform: translateY(-1px); }
+.mentor-card.sel {
+  border: 1.5px solid var(--sky);
+  background: var(--sky-l);
+  box-shadow: 0 4px 20px rgba(26,111,168,0.15);
+}
+.mentor-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; letter-spacing: -0.5px;
+}
+.av-sky  { background: var(--sky-l);    color: var(--sky);    border: 1.5px solid var(--sky-mid); }
+.av-navy { background: var(--navy-l);   color: var(--navy);   border: 1.5px solid #BFDBFE; }
+.av-amr  { background: var(--amber-l);  color: var(--amber);  border: 1.5px solid #FCD34D; }
+.av-pur  { background: var(--purple-l); color: var(--purple); border: 1.5px solid #C4B5FD; }
+.av-mint { background: var(--mint-l);   color: var(--mint);   border: 1.5px solid #5EEAD4; }
+.av-green{ background: var(--green-l);  color: var(--green);  border: 1.5px solid #6EE7B7; }
+.mentor-name { font-size: 14.5px; font-weight: 700; color: var(--navy); }
+.mentor-job  { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+.match-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: var(--sky-l); color: var(--sky); border: 1px solid var(--sky-mid); margin-left: auto; }
+.mentor-tagline { font-size: 12px; color: var(--gray-600); font-style: italic; padding: 6px 0 8px; line-height: 1.5; }
+.mentor-reason { font-size: 12px; color: var(--gray-600); line-height: 1.6; padding: 10px 12px; background: var(--gray-50); border-radius: var(--radius-sm); border-left: 3px solid var(--sky-mid); margin-bottom: 10px; }
+.mentor-topics { display: flex; flex-wrap: wrap; gap: 5px; }
+.topic-pill { font-size: 10.5px; padding: 3px 9px; border-radius: 8px; background: var(--white); border: 1px solid var(--gray-200); color: var(--gray-600); }
+
+/* ── INFO BOX ── */
+.info-box {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--sky-l); border: 1px solid var(--sky-mid);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  font-size: 12px; color: var(--gray-600); line-height: 1.65; margin-bottom: 14px;
+}
+.info-box i { font-size: 17px; color: var(--sky); margin-top: 1px; flex-shrink: 0; }
+.info-box.warn-box { background: var(--amber-l); border-color: #FCD34D; }
+.info-box.warn-box i { color: var(--amber); }
+.info-box.ok-box { background: var(--green-l); border-color: #6EE7B7; }
+.info-box.ok-box i { color: var(--green); }
+.info-box.mint-box { background: var(--mint-l); border-color: #5EEAD4; }
+.info-box.mint-box i { color: var(--mint); }
+
+/* ── PRIVACY NOTICE ── */
+.privacy-notice {
+  background: var(--navy-l); border: 1px solid #BFDBFE;
+  border-radius: var(--radius-md); padding: 13px 15px;
+  font-size: 12px; color: var(--gray-600); line-height: 1.7; margin-bottom: 18px;
+}
+.privacy-notice .pn-title {
+  font-size: 12px; font-weight: 700; color: var(--navy);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.privacy-notice .pn-title i { font-size: 15px; color: var(--sky); }
+.privacy-notice ul { padding-left: 14px; }
+.privacy-notice ul li { margin-bottom: 3px; }
+
+/* ── CONSENT BOX ── */
+.consent-box { border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 14px; }
+.consent-box-header {
+  background: var(--navy-l); padding: 12px 15px;
+  font-size: 12px; font-weight: 700; color: var(--navy);
+  display: flex; align-items: center; gap: 7px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.consent-box-header i { font-size: 16px; color: var(--sky); }
+.consent-item { padding: 12px 15px; border-bottom: 1px solid var(--gray-100); background: var(--white); }
+.consent-item:last-child { border-bottom: none; }
+.consent-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.consent-row:last-child { margin-bottom: 0; }
+.consent-row input[type=checkbox] { width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: var(--sky); cursor: pointer; }
+.consent-text { font-size: 12px; color: var(--gray-600); line-height: 1.65; }
+.consent-text strong { color: var(--gray-800); }
+.consent-required { font-size: 10px; font-weight: 700; color: var(--red); background: var(--red-l); border: 1px solid #FCA5A5; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+.consent-optional { font-size: 10px; font-weight: 700; color: var(--gray-400); background: var(--gray-100); border: 1px solid var(--gray-200); padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+
+/* ── AGE GATE ── */
+.age-gate { display: flex; flex-direction: column; align-items: center; padding: 12px 22px; text-align: center; }
+.age-gate .icon-wrap {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: var(--sky-l); border: 2px solid var(--sky-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; color: var(--sky); margin-bottom: 18px;
+  box-shadow: 0 6px 24px rgba(26,111,168,0.18);
+}
+.age-gate h2 { font-size: 19px; font-weight: 700; margin-bottom: 8px; color: var(--navy); }
+.age-gate p { font-size: 13px; color: var(--gray-600); line-height: 1.65; margin-bottom: 24px; max-width: 360px; }
+.birth-row { display: flex; gap: 8px; width: 100%; max-width: 400px; margin-bottom: 18px; }
+
+/* ── REPORT ── */
+.report-section { margin-bottom: 16px; }
+.report-section h3 { font-size: 12px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.2px; text-transform: uppercase; }
+.report-section h3 i { font-size: 14px; color: var(--sky); }
+.report-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; line-height: 1.7; color: var(--gray-800); }
+.kchip { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin: 3px 3px 3px 0; background: var(--sky-l); color: var(--sky); border: 1px solid var(--sky-mid); }
+.kchip.mint { background: var(--mint-l); color: var(--mint); border-color: #5EEAD4; }
+.kchip.warm { background: var(--warm-l); color: var(--warm); border-color: #FDE68A; }
+
+/* ── SECURITY BADGE ── */
+.security-badge { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 11px; color: var(--gray-400); padding: 10px 0; }
+.security-badge i { font-size: 14px; color: var(--green); }
+
+/* ── VIDEO AREA ── */
+.video-area { background: #0d1825; border: 1px solid rgba(26,111,168,0.25); border-radius: var(--radius-lg); aspect-ratio: 16/10; position: relative; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+
+/* ── CTRL BUTTONS ── */
+.ctrl-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--gray-200); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 19px; color: var(--gray-600); transition: all .15s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.ctrl-btn:hover { background: var(--sky-l); border-color: var(--sky); color: var(--sky); }
+.ctrl-btn.danger { background: var(--red-l); border-color: #FCA5A5; color: var(--red); }
+.ctrl-btn.danger:hover { background: #FECACA; }
+
+hr { border: none; border-top: 1px solid var(--gray-200); margin: 14px 0; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── NAV ROW ── */
+.nav-row { display: flex; gap: 8px; padding: 12px 24px 18px; border-top: 1px solid var(--gray-200); background: var(--gray-50); }
+.nav-row .btn-primary, .nav-row .btn-secondary { flex: 1; }
+.nav-row .btn-secondary { max-width: 110px; }
+.screen-footer { padding: 12px 24px 18px; border-top: 1px solid var(--gray-200); background: var(--gray-50); }
+
+/* ════════════════════════════════════════════════════════
+   화면별 특화 컴포넌트
+   ════════════════════════════════════════════════════════ */
+
+/* ── LANDING HERO ── */
+.hero {
+  position: relative;
+  padding: 40px 26px 30px;
+  background:
+    radial-gradient(circle at 80% 10%, rgba(20,184,166,0.10), transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(26,111,168,0.12), transparent 50%),
+    linear-gradient(180deg, var(--navy-l) 0%, var(--white) 100%);
+  overflow: hidden;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: var(--sky); background: var(--sky-l);
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--sky-mid);
+  margin-bottom: 18px;
+}
+.hero-title {
+  font-size: 24px; font-weight: 800;
+  color: var(--navy); line-height: 1.4;
+  letter-spacing: -0.5px; margin-bottom: 14px;
+}
+.hero-title em {
+  font-style: normal; color: var(--sky);
+  background: linear-gradient(180deg, transparent 60%, var(--sky-mid) 60%);
+}
+.hero-sub {
+  font-size: 14px; color: var(--gray-600); line-height: 1.75;
+  margin-bottom: 26px;
+}
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 24px;
+}
+.hero-stat {
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: 12px 8px;
+  text-align: center;
+}
+.hero-stat .num { font-size: 17px; font-weight: 800; color: var(--navy); }
+.hero-stat .lbl { font-size: 10px; color: var(--gray-600); margin-top: 2px; }
+
+.demo-note {
+  font-size: 10.5px;
+  color: var(--gray-400);
+  line-height: 1.5;
+  margin-top: -10px;
+  margin-bottom: 4px;
+}
+
+.value-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0 24px 18px; }
+.value-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px;
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+.value-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.value-icon.c1 { background: var(--sky-l); color: var(--sky); }
+.value-icon.c2 { background: var(--mint-l); color: var(--mint); }
+.value-icon.c3 { background: var(--warm-l); color: var(--warm); }
+.value-card .vc-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+.value-card .vc-desc { font-size: 12px; color: var(--gray-600); line-height: 1.55; }
+
+.testimonial-strip {
+  background: var(--navy);
+  padding: 18px 24px;
+  color: rgba(255,255,255,0.92);
+  font-size: 13px; line-height: 1.6;
+}
+.testimonial-strip .ts-quote { font-style: italic; margin-bottom: 6px; }
+.testimonial-strip .ts-author { font-size: 11px; color: var(--sky-mid); font-weight: 600; }
+
+/* ── 자기소개 prompts ── */
+.prompt-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: border-color .18s;
+}
+.prompt-card:focus-within { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(26,111,168,0.08); }
+.prompt-card .p-q {
+  font-size: 13px; font-weight: 600; color: var(--navy);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.prompt-card .p-q i { color: var(--sky); font-size: 15px; }
+.prompt-card textarea {
+  border: none; background: transparent; padding: 0;
+  font-size: 13px; min-height: 50px;
+}
+.prompt-card textarea:focus { box-shadow: none; }
+
+/* ── AI 분석 결과 ── */
+.analysis-hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--sky-deep) 100%);
+  color: #fff;
+  padding: 18px 18px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.analysis-hero::before {
+  content: '';
+  position: absolute; right: -30px; top: -30px;
+  width: 120px; height: 120px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(179,216,240,0.25), transparent 70%);
+}
+.analysis-hero .ah-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--sky-mid); margin-bottom: 6px;
+}
+.analysis-hero .ah-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.analysis-hero .ah-sub { font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.55; }
+
+.analysis-card {
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: 14px;
+  margin-bottom: 10px;
+}
+.analysis-card .ac-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px;
+  color: var(--sky); text-transform: uppercase;
+  display: flex; align-items: center; gap: 5px; margin-bottom: 9px;
+}
+.analysis-card .ac-label i { font-size: 13px; }
+.trait-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.trait-row:last-child { margin-bottom: 0; }
+.trait-label { font-size: 12px; color: var(--gray-600); min-width: 76px; }
+.trait-bar { flex: 1; height: 6px; background: var(--gray-100); border-radius: 3px; overflow: hidden; }
+.trait-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sky) 0%, var(--mint) 100%);
+  border-radius: 3px;
+  animation: barFill 0.9s ease-out;
+}
+@keyframes barFill { from { width: 0 !important; } }
+.trait-val { font-size: 11px; color: var(--navy); font-weight: 700; min-width: 28px; text-align: right; }
+
+.career-suggestion {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--mint-l); border: 1px solid #5EEAD4;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.career-suggestion:last-child { margin-bottom: 0; }
+.career-suggestion .cs-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--mint); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.career-suggestion .cs-name { font-weight: 600; color: var(--gray-800); }
+.career-suggestion .cs-match { margin-left: auto; font-size: 11px; color: var(--mint); font-weight: 700; }
+
+/* ── 보호자 안심 화면 ── */
+.safety-hero {
+  background: linear-gradient(135deg, var(--green-l) 0%, var(--mint-l) 100%);
+  border: 1px solid #6EE7B7;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.safety-hero .sh-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--white); border: 2px solid var(--green);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 24px; color: var(--green); margin-bottom: 10px;
+}
+.safety-hero h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.safety-hero p { font-size: 12px; color: var(--gray-600); line-height: 1.55; }
+
+.safety-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.safety-item {
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: 12px;
+  display: flex; gap: 9px;
+}
+.safety-item .si-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--sky-l); color: var(--sky);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.safety-item .si-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+.safety-item .si-desc { font-size: 10.5px; color: var(--gray-600); line-height: 1.45; }
+
+/* ── 결제 요약 ── */
+.summary-card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: var(--white);
+}
+.summary-head {
+  background: var(--navy);
+  padding: 14px 16px; color: #fff;
+}
+.summary-head .sh-mentor { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.summary-head .sh-meta { font-size: 11px; color: rgba(255,255,255,0.6); }
+.summary-body { padding: 14px 16px; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; }
+.summary-row .sr-label { color: var(--gray-600); }
+.summary-row .sr-value { color: var(--gray-800); font-weight: 500; }
+.included-list {
+  background: var(--sky-l); border: 1px solid var(--sky-mid);
+  border-radius: var(--radius-sm); padding: 11px 13px;
+  margin: 10px 0;
+}
+.included-list .il-title {
+  font-size: 11px; font-weight: 700; color: var(--sky);
+  text-transform: uppercase; letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+.included-list ul { list-style: none; padding: 0; }
+.included-list li {
+  font-size: 12px; color: var(--gray-800);
+  padding: 3px 0;
+  display: flex; align-items: center; gap: 6px;
+}
+.included-list li i { color: var(--green); font-size: 14px; }
+.total-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 10px; border-top: 1px solid var(--gray-200);
+}
+.total-row .tr-label { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+.total-row .tr-value { font-size: 18px; font-weight: 800; color: var(--sky); }
+
+/* ── 화상 세션: 질문 카드 + 메모 ── */
+.session-side-panel {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.qcard-header {
+  background: var(--white); padding: 9px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.qcard-header .qh-title { font-size: 11px; font-weight: 700; color: var(--sky); display: flex; align-items: center; gap: 5px; letter-spacing: 0.5px; }
+.qcard-header .qh-title i { font-size: 13px; }
+.qcard-header .qh-num { font-size: 11px; color: var(--gray-400); font-weight: 600; }
+.qcard-body { padding: 12px; font-size: 13px; color: var(--navy); font-weight: 600; line-height: 1.5; }
+.qcard-nav { padding: 8px 12px 10px; display: flex; gap: 6px; }
+.qcard-nav button {
+  flex: 1; padding: 6px 8px;
+  font-size: 11px; font-family: inherit;
+  border: 1px solid var(--gray-200); background: var(--white);
+  border-radius: 6px; cursor: pointer; color: var(--gray-600);
+  transition: all .15s;
+}
+.qcard-nav button:hover { border-color: var(--sky); color: var(--sky); }
+.qcard-nav button.active { background: var(--sky); border-color: var(--sky); color: #fff; font-weight: 600; }
+
+.memo-box {
+  background: var(--cream); border: 1px dashed #FCD34D;
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.memo-box .mb-title {
+  font-size: 11px; font-weight: 700; color: var(--amber);
+  display: flex; align-items: center; gap: 5px; margin-bottom: 6px;
+  letter-spacing: 0.4px; text-transform: uppercase;
+}
+.memo-box textarea {
+  background: transparent; border: none; padding: 0; min-height: 36px;
+  font-size: 12px; line-height: 1.5;
+}
+.memo-box textarea:focus { box-shadow: none; }
+
+/* ── 리포트 생성 중 ── */
+.loading-screen {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 40px 24px;
+}
+.loading-orb {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sky) 0%, var(--mint) 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 36px;
+  margin-bottom: 22px;
+  position: relative;
+  box-shadow: 0 0 0 0 rgba(26,111,168,0.4);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(26,111,168,0.4); }
+  70% { box-shadow: 0 0 0 24px rgba(26,111,168,0); }
+  100% { box-shadow: 0 0 0 0 rgba(26,111,168,0); }
+}
+.loading-title { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+.loading-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 26px; max-width: 340px; line-height: 1.55; }
+.analyze-list {
+  width: 100%; max-width: 360px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.analyze-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--white); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 12.5px; color: var(--gray-600);
+  text-align: left;
+  transition: all .3s;
+}
+.analyze-item .ai-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gray-100); color: var(--gray-400);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0;
+  transition: all .3s;
+}
+.analyze-item.done { background: var(--sky-l); border-color: var(--sky-mid); color: var(--navy); font-weight: 600; }
+.analyze-item.done .ai-icon { background: var(--sky); color: #fff; }
+.analyze-item.cur .ai-icon { background: var(--sky); color: #fff; animation: blink 1.2s infinite; }
+.analyze-item.cur { color: var(--navy); font-weight: 600; }
+
+.report-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.report-badge-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--navy);
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 20px;
+  padding: 5px 9px;
+}
+
+.report-badge-row i {
+  font-size: 12px;
+  color: var(--warm);
+}
+
+.report-outline {
+  display: grid;
+  gap: 8px;
+}
+
+.ro-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+}
+
+.ro-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ro-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.ro-desc {
+  font-size: 11.5px;
+  color: var(--gray-600);
+  line-height: 1.45;
+}
+
+/* ── 로드맵(다음 활동) ── */
+.roadmap {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.roadmap-step {
+  flex: 1; background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  text-align: center; position: relative;
+}
+.roadmap-step.done { background: var(--sky-l); border-color: var(--sky-mid); }
+.roadmap-step.cur { background: var(--navy); border-color: var(--navy); color: #fff; }
+.roadmap-step.cur .rs-label { color: rgba(255,255,255,0.7); }
+.roadmap-step.cur .rs-name { color: #fff; }
+.roadmap-step .rs-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--sky); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; margin-bottom: 6px;
+}
+.roadmap-step.cur .rs-icon { background: var(--warm); }
+.roadmap-step .rs-label { font-size: 9.5px; color: var(--gray-400); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.roadmap-step .rs-name { font-size: 12px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+
+.package-card {
+  border: 2px solid var(--sky);
+  background: linear-gradient(135deg, var(--white) 0%, var(--sky-l) 100%);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.package-card .pc-ribbon {
+  position: absolute; top: 10px; right: -32px;
+  background: var(--warm); color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 36px;
+  transform: rotate(35deg);
+  letter-spacing: 0.5px;
+}
+.package-card .pc-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.package-card .pc-sub { font-size: 12px; color: var(--gray-600); margin-bottom: 10px; }
+.package-card .pc-price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.package-card .pc-old { font-size: 12px; color: var(--gray-400); text-decoration: line-through; }
+.package-card .pc-new { font-size: 20px; font-weight: 800; color: var(--sky); }
+.package-card .pc-save { font-size: 11px; color: var(--green); font-weight: 700; background: var(--green-l); padding: 2px 7px; border-radius: 8px; }
+.package-card ul { list-style: none; padding: 0; margin-top: 10px; }
+.package-card li { font-size: 12px; color: var(--gray-800); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+.package-card li i { color: var(--green); font-size: 14px; }
+
+.archive-card {
+  background: var(--cream); border: 1px solid #FDE68A;
+  border-radius: var(--radius-md); padding: 12px 14px;
+  display: flex; gap: 10px; margin-bottom: 12px;
+}
+.archive-card i { font-size: 22px; color: var(--warm); flex-shrink: 0; margin-top: 1px; }
+.archive-card .arc-title { font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+.archive-card .arc-desc { font-size: 11.5px; color: var(--gray-600); line-height: 1.55; }
+
+
+
+/* ── DEMO / BUSINESS OVERVIEW SCREENS ── */
+.mvp-note {
+  text-align:center;
+  font-size:10.5px;
+  color:var(--gray-400);
+  line-height:1.5;
+  margin-top:10px;
+}
+.demo-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.demo-card {
+  background:var(--white);
+  border:1px solid var(--gray-200);
+  border-radius:var(--radius-md);
+  padding:14px;
+  min-height:118px;
+}
+.demo-card .dc-icon {
+  width:34px; height:34px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:9px; font-size:18px;
+  background:var(--sky-l); color:var(--sky);
+}
+.demo-card .dc-title { font-size:13px; font-weight:800; color:var(--navy); margin-bottom:5px; }
+.demo-card .dc-desc { font-size:11.5px; color:var(--gray-600); line-height:1.55; }
+.flow-six { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.validation-card {
+  margin: 14px 0;
+  padding: 15px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--white) 0%, var(--gray-50) 100%);
+}
+
+.validation-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.validation-head i {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--warm-l);
+  color: var(--warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.validation-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.validation-sub {
+  font-size: 11.5px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.validation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.validation-item {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.vi-num {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 3px;
+}
+
+.vi-label {
+  font-size: 10.5px;
+  color: var(--gray-600);
+  line-height: 1.35;
+}
+.flow-card {
+  position:relative;
+  background:linear-gradient(180deg,var(--white) 0%,var(--gray-50) 100%);
+  border:1px solid var(--gray-200);
+  border-radius:var(--radius-md);
+  padding:14px 12px 13px;
+}
+.flow-card .fc-num {
+  position:absolute; top:10px; right:10px;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--navy); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800;
+}
+.flow-card .fc-icon { font-size:21px; color:var(--sky); margin-bottom:8px; }
+.flow-card .fc-title { font-size:13px; font-weight:800; color:var(--navy); margin-bottom:4px; }
+.flow-card .fc-desc { font-size:11.5px; color:var(--gray-600); line-height:1.5; padding-right:12px; }
+.package-four { display:grid; grid-template-columns:1fr; gap:9px; margin-bottom:14px; }
+.pkg-step {
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--white); border:1px solid var(--gray-200);
+  border-radius:var(--radius-md); padding:13px;
+}
+.pkg-step .ps-badge {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--sky-l); color:var(--sky); font-size:19px;
+}
+.pkg-step .ps-title { font-size:13.5px; font-weight:800; color:var(--navy); margin-bottom:3px; }
+.pkg-step .ps-desc { font-size:11.8px; color:var(--gray-600); line-height:1.55; }
+.pkg-output { margin-top:7px; display:flex; flex-wrap:wrap; gap:5px; }
+.pkg-output span { font-size:10.5px; padding:3px 7px; border-radius:8px; background:var(--mint-l); color:var(--mint); border:1px solid #5EEAD4; font-weight:600; }
+.dash-shell {
+  border:1px solid var(--gray-200); border-radius:var(--radius-lg);
+  background:var(--white); overflow:hidden; margin-bottom:14px;
+}
+.dash-top {
+  background:var(--navy); color:#fff; padding:13px 15px;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+.dash-top .dt-title { font-size:13px; font-weight:800; }
+.dash-top .dt-sub { font-size:10.5px; color:rgba(255,255,255,.65); margin-top:2px; }
+.dash-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px; background:var(--gray-50); border-bottom:1px solid var(--gray-200); }
+.dash-metric { background:var(--white); border:1px solid var(--gray-200); border-radius:10px; padding:10px 8px; text-align:center; }
+.dash-metric .dm-num { font-size:16px; font-weight:800; color:var(--navy); }
+.dash-metric .dm-lbl { font-size:10px; color:var(--gray-600); margin-top:2px; }
+.demo-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+.demo-table th { text-align:left; padding:9px 10px; color:var(--gray-600); background:var(--gray-50); border-bottom:1px solid var(--gray-200); font-weight:700; }
+.demo-table td { padding:10px; border-bottom:1px solid var(--gray-100); color:var(--gray-800); }
+.demo-table tr:last-child td { border-bottom:none; }
+.status-pill { font-size:10px; font-weight:800; padding:3px 7px; border-radius:9px; white-space:nowrap; }
+.status-pill.done { background:var(--green-l); color:var(--green); border:1px solid #6EE7B7; }
+.status-pill.progress { background:var(--sky-l); color:var(--sky); border:1px solid var(--sky-mid); }
+.status-pill.wait { background:var(--amber-l); color:var(--amber); border:1px solid #FCD34D; }
+.mentor-benefit-list { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px; }
+.mentor-benefit {
+  background:var(--white); border:1px solid var(--gray-200);
+  border-radius:var(--radius-md); padding:12px;
+}
+.mentor-benefit i { color:var(--sky); font-size:18px; margin-bottom:6px; display:block; }
+.mentor-benefit .mbt { font-size:12.5px; font-weight:800; color:var(--navy); margin-bottom:3px; }
+.mentor-benefit .mbd { font-size:11.2px; color:var(--gray-600); line-height:1.5; }
+.demo-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.demo-tab { font-size:11px; padding:5px 9px; border-radius:10px; background:var(--gray-50); color:var(--gray-600); border:1px solid var(--gray-200); font-weight:700; }
+.demo-tab.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+
+
+
+/* ── QUICK NAV: 자유 탐색용 ── */
+.quick-nav {
+  display:flex;
+  gap:6px;
+  padding:8px 14px;
+  background:var(--white);
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.quick-nav::-webkit-scrollbar { display:none; }
+.quick-nav button {
+  flex:0 0 auto;
+  border:1px solid var(--gray-200);
+  background:var(--gray-50);
+  color:var(--gray-600);
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:10.5px;
+  font-weight:700;
+  font-family:inherit;
+  cursor:pointer;
+  transition:all .15s;
+}
+.quick-nav button:hover { border-color:var(--sky); color:var(--sky); background:var(--sky-l); }
+.quick-nav button.on { background:var(--navy); color:#fff; border-color:var(--navy); }
+.mentor-list-head {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--gray-50); border:1px solid var(--gray-200);
+  border-radius:var(--radius-md); padding:12px 14px; margin-bottom:12px;
+}
+.mentor-list-head .mlh-title { font-size:12.5px; font-weight:800; color:var(--navy); }
+.mentor-list-head .mlh-sub { font-size:11px; color:var(--gray-600); margin-top:2px; }
+.mentor-filter-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.mentor-filter-row span { font-size:10.5px; padding:4px 8px; border-radius:9px; border:1px solid var(--gray-200); background:var(--white); color:var(--gray-600); font-weight:700; }
+.mentor-filter-row span.on { background:var(--sky-l); color:var(--sky); border-color:var(--sky-mid); }
+
+
+.quick-nav-wrap {
+  background:var(--white);
+  border-bottom:1px solid var(--gray-200);
+}
+.quick-nav-top {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:7px 14px 0;
+}
+.quick-nav-top span {
+  display:flex; align-items:center; gap:5px;
+  font-size:10.5px; font-weight:800; color:var(--gray-600); letter-spacing:.2px;
+}
+.quick-nav-top button {
+  border:1px solid var(--gray-200); background:var(--gray-50); color:var(--gray-600);
+  border-radius:999px; padding:4px 8px; font-size:10px; font-weight:700;
+  font-family:inherit; cursor:pointer;
+}
+.quick-nav-wrap.collapsed .quick-nav { display:none; }
+.quick-nav-wrap.collapsed .quick-nav-top { padding-bottom:7px; }
+.mentor-compact-list { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
+.mentor-compact-card {
+  display:flex; align-items:center; gap:10px;
+  border:1px solid var(--gray-200); background:var(--white);
+  border-radius:var(--radius-md); padding:9px 10px; cursor:pointer; transition:all .15s;
+}
+.mentor-compact-card:hover { border-color:var(--sky); background:var(--sky-l); transform:translateY(-1px); }
+.mentor-compact-card.sel { border-color:var(--sky); background:var(--sky-l); box-shadow:0 3px 12px rgba(26,111,168,.12); }
+.mentor-compact-card .avatar { width:34px; height:34px; font-size:11px; }
+.mentor-compact-main { flex:1; min-width:0; }
+.mentor-compact-top { display:flex; align-items:center; gap:6px; margin-bottom:2px; }
+.mentor-compact-name { font-size:13px; font-weight:800; color:var(--navy); white-space:nowrap; }
+.mentor-compact-job { font-size:11px; color:var(--gray-600); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.mentor-mini-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
+.mentor-mini-tags span { font-size:9.5px; padding:2px 6px; border-radius:7px; background:var(--gray-50); border:1px solid var(--gray-200); color:var(--gray-600); font-weight:600; }
+.mentor-side { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.match-mini { font-size:10px; font-weight:800; color:var(--sky); }
+.availability-pill { font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:999px; border:1px solid var(--gray-200); background:var(--gray-50); color:var(--gray-600); white-space:nowrap; }
+.availability-pill.ok { background:var(--green-l); color:var(--green); border-color:#6EE7B7; }
+.availability-pill.soon { background:var(--amber-l); color:var(--amber); border-color:#FCD34D; }
+.mentor-filter-row button {
+  font-size:10.5px; padding:4px 8px; border-radius:9px; border:1px solid var(--gray-200);
+  background:var(--white); color:var(--gray-600); font-weight:700; font-family:inherit; cursor:pointer;
+}
+.mentor-filter-row button.on { background:var(--sky-l); color:var(--sky); border-color:var(--sky-mid); }
+.pagination-row { display:flex; align-items:center; justify-content:center; gap:8px; margin:12px 0 14px; }
+.page-btn {
+  border:1px solid var(--gray-200); background:var(--white); color:var(--gray-600);
+  border-radius:10px; padding:7px 12px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer;
+}
+.page-btn:disabled { opacity:.4; cursor:not-allowed; }
+.page-indicator { font-size:12px; font-weight:800; color:var(--navy); min-width:52px; text-align:center; }
+
+/* ── 모바일 보정 ── */
+@media (max-width: 480px) {
+  body { padding: 0; }
+  .app { border-radius: 0; }
+  .hero-title { font-size: 21px; }
+  .safety-grid { grid-template-columns: 1fr; }
+  .roadmap { flex-direction: column; }
+  .demo-grid, .flow-six, .mentor-benefit-list, .validation-grid { grid-template-columns: 1fr; }
+  .dash-metrics { grid-template-columns: 1fr; }
+  .nav-row .btn-secondary { max-width: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ════════════════════════════════════════════════════════
+     HEADER + PROGRESS
+     ════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="logo-mark">M</div>
+  <span class="logo-text">MEETOR</span>
+  <div class="step-dots" id="stepDots"></div>
+</div>
+<div class="quick-nav-wrap" id="quickNavWrap">
+  <div class="quick-nav-top">
+    <span><i class="ti ti-compass"></i> 빠른 이동</span>
+    <button type="button" id="quickNavToggle" onclick="toggleQuickNav()">숨기기</button>
+  </div>
+  <div class="quick-nav" id="quickNav"></div>
+</div>
+<div class="prog-track" id="progTrack"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     S0: 랜딩 / 문제 제기
+     "AI 매칭 앱"이 아니라 "교육 플랫폼"으로 첫인상을 잡는 화면
+     ════════════════════════════════════════════════════════ -->
+<div class="screen active" id="s0">
+  <div class="hero">
+    <span class="hero-eyebrow"><i class="ti ti-sparkles"></i> AI 기반 진로탐색 멘토링</span>
+    <h1 class="hero-title">
+      아이가 <em>"뭘 하고 싶은지 모르겠다"</em>고<br>
+      말할 때, MEETOR는<br>
+      실제 그 일을 하는 어른과 연결합니다.
+    </h1>
+    <p class="hero-sub">
+      막연한 진로 검사 대신, <strong style="color:var(--navy)">현업 멘토 1:1 화상 멘토링</strong>으로
+      아이의 가능성을 탐색하세요. 세션이 끝나면 학교 제출 및 진로활동 기록 참고용 <strong style="color:var(--navy)">진로탐색 리포트</strong>가 남습니다.
+    </p>
+<div class="hero-stats">
+  <div class="hero-stat">
+    <div class="num">50명</div>
+    <div class="lbl">초기 멘토 확보 목표</div>
+  </div>
+  <div class="hero-stat">
+    <div class="num">10개</div>
+    <div class="lbl">우선 검증 직업군</div>
+  </div>
+  <div class="hero-stat">
+    <div class="num">5명</div>
+    <div class="lbl">학부모 인터뷰 목표</div>
+  </div>
+</div>
+<div class="demo-note">
+  ※ 본 화면의 수치는 MVP 검증 단계의 목표 기준이며, 실제 운영 데이터가 아닙니다.
+</div>
+  </div>
+
+  <!-- 핵심 가치 3가지 -->
+  <div class="value-grid">
+    <div class="value-card">
+      <div class="value-icon c1"><i class="ti ti-id-badge-2"></i></div>
+      <div>
+        <div class="vc-title">검증된 현업 멘토</div>
+        <div class="vc-desc">신원·재직 인증, 성범죄 경력 조회, 청소년 멘토링 교육을 마친 현업 실무자만 연결합니다.</div>
+      </div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon c2"><i class="ti ti-shield-heart"></i></div>
+      <div>
+        <div class="vc-title">보호자 안심 설계</div>
+        <div class="vc-desc">세션 전 구간 녹화, 보호자 실시간 참관 가능, 플랫폼 내 대화만 허용 — 미성년자 보호 기본 탑재.</div>
+      </div>
+    </div>
+    <div class="value-card">
+      <div class="value-icon c3"><i class="ti ti-file-certificate"></i></div>
+      <div>
+        <div class="vc-title">학교 제출 참고용 리포트</div>
+        <div class="vc-desc">세션 후 AI가 정리한 진로탐색 리포트를 학교 제출 및 진로활동 기록 참고 자료로 활용할 수 있습니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 학부모 후기 미니 스트립 -->
+  <div class="testimonial-strip">
+    <div class="ts-quote">"검사 결과지 한 장 보던 시절이랑 다르더라구요. 진짜 그 일 하는 분이랑 60분을 얘기하니, 애가 처음으로 '구체적'이 됐어요."</div>
+    <div class="ts-author">— 중2 학부모 박○○님</div>
+  </div>
+
+  <div class="screen-footer">
+    <button class="btn-primary" onclick="go(1)">
+      <i class="ti ti-arrow-right"></i> 진로 멘토 추천받기
+    </button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="go(13)">
+      <i class="ti ti-layout-dashboard"></i> 서비스 구조 먼저 보기
+    </button>
+    <div class="mvp-note">
+      본 화면은 서비스 이해를 돕기 위한 MVP 목업이며, 일부 수치와 화면은 예시 데이터입니다.
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--gray-400);margin-top:6px">
+      만 18세 이하 청소년 대상 · 보호자 동의 후 이용 가능
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S1: 연령 확인
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s1">
+  <div class="screen-body" style="display:flex;flex-direction:column;align-items:center;padding-top:14px">
+    <div class="age-gate">
+      <div class="icon-wrap"><i class="ti ti-user-check"></i></div>
+      <h2>서비스 이용 전 연령을 확인해주세요</h2>
+      <p>MEETOR는 만 18세 이하 청소년을 위한 서비스입니다.<br>개인정보보호법에 따라 이용 전 연령 확인이 필요합니다.</p>
+      <div class="birth-row">
+        <select id="birthYear" style="flex:2"><option value="">출생 연도</option></select>
+        <select id="birthMonth" style="flex:1"><option value="">월</option></select>
+      </div>
+      <div class="info-box" style="max-width:400px;margin-bottom:18px">
+        <i class="ti ti-info-circle"></i>
+        <span>
+          <strong style="color:var(--navy)">만 14세 미만</strong>은 법정대리인(보호자)의 동의가 반드시 필요합니다. (개인정보보호법 제22조의2)
+          <br><strong style="color:var(--navy)">만 14~18세</strong>는 본인이 직접 서비스를 이용할 수 있습니다.
+        </span>
+      </div>
+      <div style="max-width:400px;width:100%">
+        <button class="btn-primary" onclick="checkAge()"><i class="ti ti-arrow-right"></i> 확인하고 시작하기</button>
+      </div>
+      <div class="privacy-notice" style="max-width:400px;margin-top:16px;text-align:left">
+        <div class="pn-title"><i class="ti ti-lock"></i> 수집 정보 안내</div>
+        <ul>
+          <li>연령 확인을 위해 출생연도·월만 수집하며, 즉시 파기됩니다.</li>
+          <li>수집 목적 외 이용 및 제3자 제공은 하지 않습니다.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S2: 학생 기본 정보 (진단 1/3)
+     기존 s1을 분할 — 부담 적은 객관식 위주
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s2">
+  <div class="screen-body">
+    <span class="tag tag-sky"><i class="ti ti-sparkles"></i>진단 · 1/3 · 기본 정보</span>
+    <div class="screen-title">어떤 학생인가요?</div>
+    <div class="screen-sub">관심 분야를 알려주면 AI가 적합한 멘토를 찾아드려요. 정답이 없으니 편하게 골라주세요.</div>
+
+    <div class="privacy-notice">
+      <div class="pn-title"><i class="ti ti-shield-check"></i> 개인정보 수집 안내</div>
+      <ul>
+        <li><strong>필수:</strong> 학년, 관심 분야 (멘토 매칭 목적)</li>
+        <li><strong>선택:</strong> 닉네임, 자유 서술 (서비스 품질 향상)</li>
+        <li>수집된 정보는 멘토 매칭 목적으로만 사용되며, 세션 종료 후 1년 보관 후 파기됩니다.</li>
+      </ul>
+    </div>
+
+    <div class="field">
+      <label class="field-label">닉네임 <span style="font-weight:400;color:var(--gray-400)">(선택 · 실명 불필요)</span></label>
+      <input type="text" id="studentName" placeholder="예) 별빛, 서연이, 민준 등 자유롭게" />
+    </div>
+
+    <div class="field">
+      <label class="field-label">학년 <span style="color:var(--red);font-size:11px">필수</span></label>
+      <div class="chips" id="gradeChips">
+        <div class="chip" data-v="초등">초등</div>
+        <div class="chip sel" data-v="중2">중2</div>
+        <div class="chip" data-v="중3">중3</div>
+        <div class="chip" data-v="고1">고1</div>
+        <div class="chip" data-v="고2">고2</div>
+        <div class="chip" data-v="고3">고3</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">관심 분야 <span style="color:var(--red);font-size:11px">필수</span> <span style="font-weight:400;color:var(--gray-400)">(복수 선택 가능)</span></label>
+      <div class="chips" id="interestChips">
+        <div class="chip sel">예술·디자인</div>
+        <div class="chip">크리에이터</div>
+        <div class="chip">스포츠</div>
+        <div class="chip">의료·과학</div>
+        <div class="chip">IT·개발</div>
+        <div class="chip">요리·식품</div>
+        <div class="chip">법률·경제</div>
+        <div class="chip">교육·심리</div>
+        <div class="chip">기술·장인</div>
+        <div class="chip dontknow" onclick="this.classList.toggle('sel')">아직 모르겠어요</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">좋아하는 활동 <span style="font-weight:400;color:var(--gray-400)">(복수 선택)</span></label>
+      <div class="chips">
+        <div class="chip sel" onclick="this.classList.toggle('sel')">그림 그리기</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">영상 만들기</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">글쓰기</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">운동</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">독서</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">게임·코딩</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">사람들과 이야기</div>
+        <div class="chip" onclick="this.classList.toggle('sel')">손으로 만들기</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(0)"><i class="ti ti-arrow-left"></i> 처음</button>
+    <button class="btn-primary" onclick="go(3)">다음 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S3: 자기소개 / 서술형 입력 (진단 2/3)
+     AI 분석의 핵심 입력 — "모른다"가 허용됨을 전면에 둠
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s3">
+  <div class="screen-body">
+    <span class="tag tag-sky"><i class="ti ti-pencil"></i>진단 · 2/3 · 자기소개</span>
+    <div class="screen-title">자유롭게 적어주세요</div>
+    <div class="screen-sub">길게 쓰지 않아도 괜찮아요. 한 줄도 좋고, 빈칸으로 둬도 돼요.</div>
+
+    <div class="info-box mint-box">
+      <i class="ti ti-heart"></i>
+      <span><strong style="color:var(--navy)">"무엇을 하고 싶은지 몰라도 괜찮아요."</strong><br>모르는 게 정상이에요. AI는 답한 내용보다, <em>관심의 결</em>을 봐요.</span>
+    </div>
+
+    <!-- prompt 1 -->
+    <div class="prompt-card">
+      <div class="p-q"><i class="ti ti-bulb"></i>요즘 관심 있는 것</div>
+      <textarea rows="2" placeholder="예) 인스타에서 유행하는 옷 스타일을 찾아보는 게 재밌어요.">인스타에서 유행하는 옷 스타일이나 무신사 룩북 보는 게 재밌어요. 친구들 옷 추천해주는 것도 좋아해요.</textarea>
+    </div>
+
+    <!-- prompt 2 -->
+    <div class="prompt-card">
+      <div class="p-q"><i class="ti ti-thumb-up"></i>잘한다고 생각하는 것</div>
+      <textarea rows="2" placeholder="예) 그림을 좀 그려요. 색감 맞추는 거 잘한다는 말 들어요.">그림 좀 그려요. 색감 맞추는 거 잘한다는 말 들어요. 발표할 때 자료 디자인은 항상 제가 맡아요.</textarea>
+    </div>
+
+    <!-- prompt 3 -->
+    <div class="prompt-card">
+      <div class="p-q"><i class="ti ti-briefcase"></i>궁금한 직업</div>
+      <textarea rows="2" placeholder="예) 패션 디자이너요. 근데 정확히 뭐 하는 건지는 잘 모르겠어요.">패션 디자이너요. 근데 정확히 뭐 하는 건지는 잘 모르겠어요. 영상 편집자도 궁금해요.</textarea>
+    </div>
+
+    <!-- prompt 4 -->
+    <div class="prompt-card">
+      <div class="p-q"><i class="ti ti-question-mark"></i>아직 잘 모르겠는 점 <span style="font-size:11px;color:var(--gray-400);font-weight:400">(가장 중요해요!)</span></div>
+      <textarea rows="2" placeholder="예) 그림 좋아한다고 다 미대 가야 하나요?">그림 좋아한다고 다 미대 가야 하는지 모르겠어요. 부모님은 안정적인 직업 하라는데 솔직히 디자이너가 어떤 생활을 하는지 한 번도 들어본 적이 없어요.</textarea>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(2)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="startAnalysis()"><i class="ti ti-robot"></i> AI 분석 시작</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S4: AI 진로 프로파일 분석 결과
+     "바로 멘토 추천"이 아니라, "AI가 학생을 분석했다"는
+     중간 결과를 보여주는 핵심 차별화 화면
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s4">
+  <div class="screen-body">
+    <span class="tag tag-amber"><i class="ti ti-robot"></i>AI 분석 결과 · 학생 진로 프로파일</span>
+
+    <div class="analysis-hero">
+      <div class="ah-eyebrow">YOUR CAREER DNA</div>
+      <div class="ah-title" id="profileName">박서연 · 중2 · 진로 프로파일</div>
+      <div class="ah-sub">자기소개 4개 항목 분석 완료 · 412명 멘토 풀에서 맞춤 매칭</div>
+    </div>
+
+    <!-- 관심 키워드 -->
+    <div class="analysis-card">
+      <div class="ac-label"><i class="ti ti-hash"></i>AI가 포착한 관심 키워드</div>
+      <div>
+        <span class="kchip">#패션</span>
+        <span class="kchip">#시각감각</span>
+        <span class="kchip mint">#트렌드</span>
+        <span class="kchip mint">#큐레이션</span>
+        <span class="kchip">#창작</span>
+        <span class="kchip warm">#사람들과나누기</span>
+      </div>
+    </div>
+
+    <!-- 성향 분석 -->
+    <div class="analysis-card">
+      <div class="ac-label"><i class="ti ti-chart-radar"></i>성향 분석</div>
+      <div class="trait-row">
+        <span class="trait-label">시각·창작형</span>
+        <div class="trait-bar"><div class="trait-fill" style="width:88%"></div></div>
+        <span class="trait-val">88</span>
+      </div>
+      <div class="trait-row">
+        <span class="trait-label">실전 경험형</span>
+        <div class="trait-bar"><div class="trait-fill" style="width:74%"></div></div>
+        <span class="trait-val">74</span>
+      </div>
+      <div class="trait-row">
+        <span class="trait-label">트렌드 민감형</span>
+        <div class="trait-bar"><div class="trait-fill" style="width:81%"></div></div>
+        <span class="trait-val">81</span>
+      </div>
+      <div class="trait-row">
+        <span class="trait-label">표현·소통형</span>
+        <div class="trait-bar"><div class="trait-fill" style="width:69%"></div></div>
+        <span class="trait-val">69</span>
+      </div>
+    </div>
+
+    <!-- 추천 진로 방향 -->
+    <div class="analysis-card">
+      <div class="ac-label"><i class="ti ti-route"></i>추천 진로 방향 Top 3</div>
+      <div class="career-suggestion">
+        <div class="cs-num">1</div>
+        <span class="cs-name">패션 디자이너 · 브랜드 디자이너</span>
+        <span class="cs-match">92%</span>
+      </div>
+      <div class="career-suggestion">
+        <div class="cs-num">2</div>
+        <span class="cs-name">패션 MD · 바이어</span>
+        <span class="cs-match">87%</span>
+      </div>
+      <div class="career-suggestion">
+        <div class="cs-num">3</div>
+        <span class="cs-name">콘텐츠 크리에이터 · 영상 편집</span>
+        <span class="cs-match">79%</span>
+      </div>
+    </div>
+
+    <!-- 추천 근거 -->
+    <div class="analysis-card">
+      <div class="ac-label"><i class="ti ti-search"></i>왜 이렇게 분석됐나요?</div>
+      <div style="font-size:12.5px;color:var(--gray-600);line-height:1.7">
+        자기소개에서 <strong style="color:var(--navy)">"색감"</strong>·<strong style="color:var(--navy)">"룩북"</strong>·<strong style="color:var(--navy)">"친구 옷 추천"</strong>이 반복적으로 등장했어요.
+        시각적 표현과 트렌드 수용이 강하고, 만든 것을 <em>사람들과 나누는</em> 행동 패턴이 보입니다.
+        디자이너처럼 <strong>만드는 일</strong>뿐 아니라, MD·바이어처럼 <strong>고르고 큐레이션하는 일</strong>도 잘 맞을 수 있어요.
+      </div>
+    </div>
+
+    <div class="info-box ok-box">
+      <i class="ti ti-check"></i>
+      <span>이 분석은 <strong style="color:var(--navy)">출발점</strong>이에요. 실제 그 일을 하는 멘토를 만나면서 검증하고 좁혀나가는 게 MEETOR의 방식입니다.</span>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(3)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(5)">맞춤 멘토 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S5: 추천 멘토 카드 (강화)
+     전형/비전형/기술장인 직업이 골고루 — 추천 이유 + 다룰 주제
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s5">
+  <div class="screen-body">
+    <span class="tag tag-amber"><i class="ti ti-users"></i>맞춤 멘토 Top 3</span>
+    <div class="screen-title">이 세 분이 가장 잘 맞아요</div>
+    <div class="screen-sub">분석된 프로파일과 관심 키워드를 기준으로 운영자 검수까지 마친 멘토예요.</div>
+
+    <!-- 멘토 1: 전형 (패션 디자이너) -->
+    <div class="mentor-card sel" id="mc1" onclick="selectMentor(1)">
+      <div class="mentor-head">
+        <div class="avatar av-sky">은지</div>
+        <div style="flex:1">
+          <div class="mentor-name">김은지 멘토</div>
+          <div class="mentor-job">패션 디자이너 · 무신사 크리에이티브팀 5년차</div>
+        </div>
+        <div class="match-badge">98% 매칭</div>
+      </div>
+      <div class="mentor-tagline">"매일 트렌드를 읽고, 옷이라는 언어로 사람들에게 말을 거는 일이에요."</div>
+      <div class="mentor-reason">
+        <strong style="color:var(--navy)">추천 이유 ·</strong> 시각·창작형 88점, 트렌드 민감형 81점. 자기소개에서 언급한 "무신사 룩북"의 실무 영역과 정확히 일치해요. 색감 감각이 강한 학생에게 디자이너의 실제 작업 흐름을 가장 생생하게 보여줄 수 있는 멘토입니다.
+      </div>
+      <div class="mentor-topics">
+        <span class="topic-pill">📅 디자이너의 하루</span>
+        <span class="topic-pill">🎨 포트폴리오 준비</span>
+        <span class="topic-pill">🎓 미대 vs 비미대</span>
+        <span class="topic-pill">💰 현실적인 수입</span>
+      </div>
+    </div>
+
+    <!-- 멘토 2: 비전형 (패션 MD) -->
+    <div class="mentor-card" id="mc2" onclick="selectMentor(2)">
+      <div class="mentor-head">
+        <div class="avatar av-mint">지원</div>
+        <div style="flex:1">
+          <div class="mentor-name">최지원 멘토</div>
+          <div class="mentor-job">패션 MD · 29CM 바잉팀 7년차</div>
+        </div>
+        <div class="match-badge">91% 매칭</div>
+      </div>
+      <div class="mentor-tagline">"만들지 않아도 패션을 직업으로 할 수 있어요. 저는 '고르는 일'을 합니다."</div>
+      <div class="mentor-reason">
+        <strong style="color:var(--navy)">추천 이유 ·</strong> "친구들 옷 추천해주는 것도 좋아해요"라는 답변에 주목했어요. 만드는 디자이너 외에 <em>큐레이션하는 직업</em>이 학생의 결과 잘 맞아요. 시야를 넓혀줄 수 있는 비전형 진로 멘토입니다.
+      </div>
+      <div class="mentor-topics">
+        <span class="topic-pill">🛍️ 바이어가 보는 옷</span>
+        <span class="topic-pill">📊 트렌드를 읽는 법</span>
+        <span class="topic-pill">🎓 전공 경로</span>
+        <span class="topic-pill">🌏 해외 출장 이야기</span>
+      </div>
+    </div>
+
+    <!-- 멘토 3: 기술/장인 (영상 크리에이터) -->
+    <div class="mentor-card" id="mc3" onclick="selectMentor(3)">
+      <div class="mentor-head">
+        <div class="avatar av-navy">준혁</div>
+        <div style="flex:1">
+          <div class="mentor-name">박준혁 멘토</div>
+          <div class="mentor-job">패션 콘텐츠 크리에이터 · 유튜브 구독자 82만</div>
+        </div>
+        <div class="match-badge">85% 매칭</div>
+      </div>
+      <div class="mentor-tagline">"카메라 한 대로 시작했어요. 지금은 패션 브랜드와 협업해 영상을 만듭니다."</div>
+      <div class="mentor-reason">
+        <strong style="color:var(--navy)">추천 이유 ·</strong> 학생이 "영상 편집자도 궁금하다"고 했죠. 패션과 영상을 결합한 직업이 실제로 존재한다는 걸 보여줄 수 있어요. 전통적인 직업관 바깥의 가능성을 탐색하기 좋은 멘토입니다.
+      </div>
+      <div class="mentor-topics">
+        <span class="topic-pill">📷 1인 크리에이터 시작</span>
+        <span class="topic-pill">✂️ 편집의 기본</span>
+        <span class="topic-pill">💼 수익화 구조</span>
+        <span class="topic-pill">⚡ 현실적 어려움</span>
+      </div>
+    </div>
+
+    <div class="security-badge">
+      <i class="ti ti-shield-check"></i>
+      성범죄 경력 조회 완료 · 청소년 멘토링 교육 수료 · 재직 인증
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(4)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-secondary" onclick="go(18)"><i class="ti ti-list-search"></i> 더 보기</button>
+    <button class="btn-primary" onclick="go(6)">이 멘토로 선택 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S6: 보호자 안심 세션 (NEW)
+     학부모가 결제 직전 신뢰를 굳히는 화면
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s6">
+  <div class="screen-body">
+    <span class="tag tag-green"><i class="ti ti-shield-heart"></i>보호자 안심 세션</span>
+    <div class="screen-title">미성년자 보호, 가장 먼저 설계했어요</div>
+    <div class="screen-sub">MEETOR는 멘토 매칭 플랫폼이기 전에, 청소년 보호 플랫폼입니다.</div>
+
+    <div class="safety-hero">
+      <div class="sh-icon"><i class="ti ti-shield-check"></i></div>
+      <h3>모든 멘토는 7단계 검증을 통과합니다</h3>
+      <p>실명 인증 · 재직 인증 · 성범죄 경력 조회 · 아동학대 경력 조회 ·<br>청소년 멘토링 교육 이수 · 운영자 면접 · 평판 검토</p>
+    </div>
+
+    <div class="safety-grid">
+      <div class="safety-item">
+        <div class="si-icon"><i class="ti ti-id-badge-2"></i></div>
+        <div>
+          <div class="si-title">신원 인증 완료</div>
+          <div class="si-desc">실명·재직 증명 모두 검증된 멘토만 활동</div>
+        </div>
+      </div>
+      <div class="safety-item">
+        <div class="si-icon" style="background:var(--red-l);color:var(--red)"><i class="ti ti-alert-triangle"></i></div>
+        <div>
+          <div class="si-title">범죄 경력 조회</div>
+          <div class="si-desc">성범죄·아동학대 경력 조회 (분기별 재검증)</div>
+        </div>
+      </div>
+      <div class="safety-item">
+        <div class="si-icon" style="background:var(--amber-l);color:var(--amber)"><i class="ti ti-video"></i></div>
+        <div>
+          <div class="si-title">전 구간 녹화</div>
+          <div class="si-desc">모든 세션 자동 녹화 · 사후 검수 시스템</div>
+        </div>
+      </div>
+      <div class="safety-item">
+        <div class="si-icon" style="background:var(--mint-l);color:var(--mint)"><i class="ti ti-eye"></i></div>
+        <div>
+          <div class="si-title">보호자 참관</div>
+          <div class="si-desc">언제든지 화상 세션에 동시 참관 가능</div>
+        </div>
+      </div>
+      <div class="safety-item">
+        <div class="si-icon" style="background:var(--purple-l);color:var(--purple)"><i class="ti ti-message-2-off"></i></div>
+        <div>
+          <div class="si-title">플랫폼 내 대화</div>
+          <div class="si-desc">개인 연락처 교환 금지 · 자동 마스킹</div>
+        </div>
+      </div>
+      <div class="safety-item">
+        <div class="si-icon" style="background:var(--red-l);color:var(--red)"><i class="ti ti-flag-2"></i></div>
+        <div>
+          <div class="si-title">신고·분쟁 대응</div>
+          <div class="si-desc">24시간 신고 채널 · 운영팀 즉시 개입</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 산출물 안내 -->
+    <div class="info-box" style="background:var(--cream);border-color:#FDE68A">
+      <i class="ti ti-file-certificate" style="color:var(--warm)"></i>
+      <span>
+        <strong style="color:var(--navy)">세션이 끝나면 진로탐색 리포트가 자동 생성됩니다.</strong><br>
+        멘토 피드백·학생 강점·다음 액션이 정리되어, 학교 진로활동 자료로 바로 활용할 수 있어요.
+      </span>
+    </div>
+
+    <!-- 실제 사례 -->
+    <div style="background:var(--navy-l);border:1px solid #BFDBFE;border-radius:var(--radius-md);padding:13px 15px;font-size:12px;color:var(--gray-600);line-height:1.65">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;letter-spacing:0.4px"><i class="ti ti-quote" style="font-size:13px;color:var(--sky);vertical-align:-2px"></i> 실제 보호자 후기</div>
+      "참관 기능이 결정적이었어요. 처음엔 들어가 봤다가, 멘토님이 워낙 잘해주셔서 그 다음부턴 안심하고 옆방에서 일했어요. 녹화본도 다시 볼 수 있고요."
+      <div style="font-size:11px;color:var(--sky);font-weight:600;margin-top:6px">— 중3 학부모 이○○님</div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(5)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(7)">결제 진행 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S7: 결제 + 보호자 동의 (강화)
+     "무엇에 돈을 내는지" 명확히
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s7">
+  <div class="screen-body">
+    <span class="tag tag-blue"><i class="ti ti-lock"></i>결제 · 법정대리인 동의</span>
+    <div class="screen-title">결제 전 한 번 더 확인해주세요</div>
+    <div class="screen-sub">보호자님이 결제하시는 항목을 명확히 안내해드려요.</div>
+
+    <!-- 결제 요약 카드 -->
+    <div class="summary-card">
+      <div class="summary-head">
+        <div class="sh-mentor" id="paySummaryMentor">김은지 멘토 · 패션 디자이너</div>
+        <div class="sh-meta">2026.05.02 (목) 19:00–20:00 · 1:1 화상 세션</div>
+      </div>
+      <div class="summary-body">
+        <div class="summary-row">
+          <span class="sr-label">세션 시간</span>
+          <span class="sr-value">60분 (30분 옵션 가능)</span>
+        </div>
+        <div class="summary-row">
+          <span class="sr-label">멘토 등급</span>
+          <span class="sr-value">현업 5년차 · 검증 완료</span>
+        </div>
+
+        <div class="included-list">
+          <div class="il-title">결제에 포함된 것</div>
+          <ul>
+            <li><i class="ti ti-check"></i> 1:1 화상 멘토링 60분</li>
+            <li><i class="ti ti-check"></i> AI 자동 질문 가이드 카드</li>
+            <li><i class="ti ti-check"></i> 세션 전 구간 녹화 (보관 90일)</li>
+            <li><i class="ti ti-check"></i> 세션 요약 + 진로탐색 리포트 PDF</li>
+            <li><i class="ti ti-check"></i> 학교 제출 및 진로활동 기록 참고용 요약본</li>
+            <li><i class="ti ti-check"></i> 다음 액션 체크리스트 + 멘토 재추천</li>
+          </ul>
+        </div>
+
+        <div class="total-row">
+          <span class="tr-label">최종 결제 금액</span>
+          <span class="tr-value">80,000원</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="consent-box">
+      <div class="consent-box-header">
+        <i class="ti ti-shield-lock"></i> 보호자 동의 항목 (법정대리인 확인)
+      </div>
+      <div class="consent-item">
+        <div style="font-size:11px;color:var(--gray-400);margin-bottom:10px;line-height:1.5">아래 항목을 하나씩 확인해 주세요. 필수 항목에 모두 동의해야 서비스를 이용할 수 있어요.</div>
+        <div class="consent-row">
+          <input type="checkbox" id="c1" checked>
+          <label for="c1" class="consent-text"><strong>[필수]</strong><span class="consent-required">필수</span> 저(보호자)는 <strong>미성년자의 MEETOR 서비스 이용에 동의</strong>합니다. 세션은 전 구간 녹화되며, 보호자 참관이 가능합니다.</label>
+        </div>
+        <div class="consent-row">
+          <input type="checkbox" id="c2" checked>
+          <label for="c2" class="consent-text"><strong>[필수]</strong><span class="consent-required">필수</span> <strong>개인정보 수집·이용에 동의</strong>합니다. 수집 항목: 학년, 관심 분야, 닉네임 / 목적: 멘토 매칭 / 보유: 1년 후 파기</label>
+        </div>
+        <div class="consent-row">
+          <input type="checkbox" id="c3" checked>
+          <label for="c3" class="consent-text"><strong>[필수]</strong><span class="consent-required">필수</span> <strong>개인정보 제3자 제공에 동의</strong>합니다. 제공 대상: 배정 멘토 1인 / 제공 항목: 학년, 관심 분야 / 목적: 멘토링 진행</label>
+        </div>
+        <div class="consent-row">
+          <input type="checkbox" id="c4">
+          <label for="c4" class="consent-text"><strong>[선택]</strong><span class="consent-optional">선택</span> <strong>마케팅 정보 수신에 동의</strong>합니다. MEETOR 신규 멘토, 프로그램 안내를 이메일로 받아볼 수 있어요.</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box warn-box">
+      <i class="ti ti-alert-triangle"></i>
+      <span><strong>만 14세 미만</strong> 자녀의 경우, 본 동의는 법정대리인(보호자)이 직접 해주셔야 합니다. (개인정보보호법 제22조의2)</span>
+    </div>
+
+    <div class="field">
+      <label class="field-label">결제 수단</label>
+      <select><option>신용카드</option><option>카카오페이</option><option>네이버페이</option><option>계좌이체</option></select>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(6)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="checkConsent()"><i class="ti ti-credit-card"></i> 80,000원 결제하기</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S8: 화상 세션 (강화)
+     질문 가이드 카드 + 메모 영역 + 참관/녹화 표시
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s8">
+  <div class="screen-body" style="padding-bottom:8px">
+    <span class="tag tag-green"><i class="ti ti-video"></i>화상 세션 진행 중</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="screen-title" style="margin-bottom:2px;font-size:18px">김은지 멘토와 1:1 세션</div>
+        <div style="font-size:12px;color:var(--gray-600)">패션 디자이너 · 60분 중 <span id="timer" style="color:var(--sky);font-weight:700">23:14</span> 경과</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--red-l);border:1px solid #FCA5A5;color:var(--red);font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite"></div>LIVE
+      </div>
+    </div>
+
+    <!-- 영상 영역 -->
+    <div class="video-area">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="avatar av-sky" style="width:72px;height:72px;font-size:22px">은지</div>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px">김은지 멘토</p>
+      </div>
+      <div style="position:absolute;bottom:12px;right:12px;width:100px;height:70px;border-radius:var(--radius-md);background:#1a2a3a;border:1.5px solid rgba(26,111,168,0.3);display:flex;align-items:center;justify-content:center">
+        <span style="color:rgba(255,255,255,0.4);font-size:11px">나</span>
+      </div>
+      <!-- 참관 표시 -->
+      <div style="position:absolute;top:10px;left:10px;background:rgba(26,58,92,0.75);backdrop-filter:blur(4px);color:var(--sky-mid);font-size:11px;padding:4px 10px;border-radius:10px;display:flex;align-items:center;gap:4px;border:1px solid rgba(179,216,240,0.3)">
+        <i class="ti ti-eye" style="font-size:12px"></i> 보호자 참관 중
+      </div>
+      <!-- 녹화 표시 -->
+      <div style="position:absolute;top:10px;right:10px;background:rgba(220,38,38,0.85);color:#fff;font-size:11px;padding:4px 10px;border-radius:10px;display:flex;align-items:center;gap:4px">
+        <div style="width:5px;height:5px;border-radius:50%;background:#fff;animation:blink 1s infinite"></div> REC
+      </div>
+    </div>
+
+    <!-- 오늘의 질문 카드 (AI 가이드) -->
+    <div class="session-side-panel">
+      <div class="qcard-header">
+        <div class="qh-title"><i class="ti ti-message-question"></i>AI 질문 가이드</div>
+        <div class="qh-num"><span id="qNum">2</span> / 5</div>
+      </div>
+      <div class="qcard-body" id="qBody">
+        하루 일과는 보통 어떻게 흘러가나요?
+      </div>
+      <div class="qcard-nav">
+        <button onclick="setQ(1)">계기</button>
+        <button class="active" onclick="setQ(2)">하루</button>
+        <button onclick="setQ(3)">준비</button>
+        <button onclick="setQ(4)">어려움</button>
+        <button onclick="setQ(5)">작은 과제</button>
+      </div>
+    </div>
+
+    <!-- 세션 메모 -->
+    <div class="memo-box">
+      <div class="mb-title"><i class="ti ti-notebook"></i>세션 메모 (리포트에 자동 반영)</div>
+      <textarea placeholder="중요한 이야기 메모해두면 리포트에 반영돼요...">아침에 인스타·핀터레스트 2시간 리서치 → 디자인 → 회의. MD가 같이 결정한다는 점 새로움.</textarea>
+    </div>
+
+    <!-- 컨트롤 -->
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:8px">
+      <button class="ctrl-btn" title="마이크"><i class="ti ti-microphone"></i></button>
+      <button class="ctrl-btn" title="카메라"><i class="ti ti-video"></i></button>
+      <button class="ctrl-btn danger" title="종료" onclick="go(10)"><i class="ti ti-phone-off"></i></button>
+      <button class="ctrl-btn" title="화면공유"><i class="ti ti-screen-share"></i></button>
+      <button class="ctrl-btn" title="채팅" onclick="go(9)"><i class="ti ti-message"></i></button>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(7)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(10)">세션 종료 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S9: 채팅 (기존 유지, 화면 번호만 조정)
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s9">
+  <div class="screen-body" style="padding-bottom:8px;display:flex;flex-direction:column">
+    <span class="tag tag-purple"><i class="ti ti-message-circle"></i>세션 중 채팅</span>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0 12px;border-bottom:1px solid var(--gray-200);margin-bottom:12px">
+      <div class="avatar av-sky" style="width:36px;height:36px;font-size:11px">은지</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--navy)">김은지 멘토</div>
+        <div style="font-size:11px;color:var(--sky);display:flex;align-items:center;gap:4px">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div>세션 진행 중
+        </div>
+      </div>
+      <button onclick="go(8)" style="font-size:12px;color:var(--gray-600);background:var(--gray-100);border:1px solid var(--gray-200);padding:5px 10px;border-radius:10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
+        <i class="ti ti-video" style="font-size:13px;color:var(--sky)"></i> 화상으로 돌아가기
+      </button>
+    </div>
+    <div id="chatArea" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:260px;max-height:300px;padding-bottom:4px">
+      <div style="text-align:center;font-size:11px;color:var(--gray-400);padding:4px 0">오늘 오후 7:00 · 세션 시작</div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <div class="avatar av-sky" style="width:28px;height:28px;font-size:10px;flex-shrink:0">은지</div>
+        <div>
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px">김은지 멘토</div>
+          <div style="background:var(--gray-100);border:1px solid var(--gray-200);padding:9px 12px;border-radius:0 12px 12px 12px;font-size:13px;max-width:260px;line-height:1.5;color:var(--gray-800)">안녕하세요! 오늘 어떤 이야기가 제일 궁금하신가요? 😊</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <div>
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;text-align:right">박서연</div>
+          <div style="background:var(--navy);color:#fff;padding:9px 12px;border-radius:12px 0 12px 12px;font-size:13px;max-width:260px;line-height:1.5">무신사에서 디자이너로 일하는 게 어떤 건지 알고 싶어요!</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <div class="avatar av-sky" style="width:28px;height:28px;font-size:10px;flex-shrink:0">은지</div>
+        <div>
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px">김은지 멘토</div>
+          <div style="background:var(--gray-100);border:1px solid var(--gray-200);padding:9px 12px;border-radius:0 12px 12px 12px;font-size:13px;max-width:260px;line-height:1.5;color:var(--gray-800)">좋은 질문이에요! 매일 아침 트렌드 리서치로 시작하는데, 인스타·핀터레스트·해외 런웨이 사진을 2시간 정도 봐요 📱</div>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--gray-200);padding-top:12px;margin-top:8px">
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:11px;color:var(--gray-400);white-space:nowrap">추천 질문:</span>
+        <button onclick="quickSend('포트폴리오는 어떻게 준비했나요?')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid var(--gray-200);background:var(--white);cursor:pointer;color:var(--gray-600);font-family:inherit;transition:all .15s">포트폴리오 준비법</button>
+        <button onclick="quickSend('연봉이나 현실적인 이야기도 궁금해요')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid var(--gray-200);background:var(--white);cursor:pointer;color:var(--gray-600);font-family:inherit;transition:all .15s">현실적인 수입</button>
+        <button onclick="quickSend('미대를 꼭 가야 하나요?')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid var(--gray-200);background:var(--white);cursor:pointer;color:var(--gray-600);font-family:inherit;transition:all .15s">미대 진학 여부</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="chatInput" placeholder="질문을 입력하세요..." style="flex:1" onkeydown="if(event.key==='Enter')sendChat()" />
+        <button onclick="sendChat()" style="padding:10px 16px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;font-family:inherit;transition:background .15s">전송</button>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(8)"><i class="ti ti-video" style="color:var(--sky)"></i> 화상</button>
+    <button class="btn-primary" onclick="go(10)">세션 종료 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S10: 세션 완료 / 리포트 생성 중 (NEW)
+     "AI가 분석한다"는 차별점을 시각적으로 전달
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s10">
+  <div class="screen-body">
+    <span class="tag tag-mint"><i class="ti ti-loader"></i>리포트 생성 중</span>
+    <div class="loading-screen">
+      <div class="loading-orb"><i class="ti ti-file-analytics"></i></div>
+      <div class="loading-title">세션 내용을 분석하고 있어요</div>
+      <div class="loading-sub">60분 세션과 메모, 멘토 피드백을 바탕으로<br>학교 제출에도 활용할 수 있는 진로탐색 리포트를 만들고 있습니다.</div>
+
+      <div class="analyze-list" id="analyzeList">
+        <div class="analyze-item done"><div class="ai-icon"><i class="ti ti-check"></i></div>대화 내용 텍스트 추출 완료</div>
+        <div class="analyze-item done"><div class="ai-icon"><i class="ti ti-check"></i></div>학생 관심 분야 키워드 분석</div>
+        <div class="analyze-item cur"><div class="ai-icon"><i class="ti ti-dots"></i></div>멘토 피드백 정리 중...</div>
+        <div class="analyze-item"><div class="ai-icon">·</div>학생 질문 패턴 분석</div>
+        <div class="analyze-item"><div class="ai-icon">·</div>다음 액션 추천 생성</div>
+        <div class="analyze-item"><div class="ai-icon">·</div>학교 제출용 요약본 작성</div>
+      </div>
+
+      <div style="margin-top:24px;font-size:11px;color:var(--gray-400)">
+        평균 소요시간: 약 30초
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(8)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(11)">리포트 확인 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S11: 진로탐색 리포트 (강화 — 데모 클라이맥스)
+     학부모·학교가 "교육적 산출물"로 인정할 수준의 구성
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s11">
+  <div class="screen-body">
+    <span class="tag tag-warm"><i class="ti ti-file-certificate"></i>진로탐색 리포트 완성</span>
+    <div class="screen-title">리포트가 완성됐어요</div>
+    <div class="screen-sub">세션 내용을 AI가 정리해 학교 제출 참고와 가정 보관에 활용할 수 있는 리포트로 만들었습니다.</div>
+
+    <!-- 리포트 카드 -->
+    <div style="border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">
+      <!-- 리포트 표지 -->
+      <div style="background:linear-gradient(135deg, var(--navy) 0%, var(--sky-deep) 100%);padding:18px;color:#fff;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(179,216,240,0.2),transparent 70%)"></div>
+<div style="font-size:10px;color:var(--sky-mid);margin-bottom:5px;letter-spacing:1.5px;font-weight:700">
+  MEETOR CAREER REPORT · No. 240502-7821
+</div>
+<div style="font-size:17px;font-weight:700;color:#fff" id="reportName">
+  박서연 · 패션 디자이너 진로탐색
+</div>
+<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:5px">
+  2026.05.02 · 김은지 멘토 · 60분 세션
+</div>
+
+<div class="report-badge-row">
+  <span><i class="ti ti-school"></i> 학교 제출 참고용</span>
+  <span><i class="ti ti-file-check"></i> 진로활동 기록 보조자료</span>
+</div>
+      </div>
+
+<div style="padding:18px">
+
+  <!-- 산출물 구성 -->
+  <div class="report-section">
+    <h3><i class="ti ti-layout-list"></i>진로탐색 리포트 구성</h3>
+    <div class="report-outline">
+      <div class="ro-item">
+        <span class="ro-num">1</span>
+        <div>
+          <div class="ro-title">학생 관심 분야 요약</div>
+          <div class="ro-desc">세션 전 입력과 대화 내용을 바탕으로 핵심 관심사를 정리</div>
+        </div>
+      </div>
+      <div class="ro-item">
+        <span class="ro-num">2</span>
+        <div>
+          <div class="ro-title">멘토가 본 강점</div>
+          <div class="ro-desc">현업자 관점에서 학생의 강점과 가능성을 피드백</div>
+        </div>
+      </div>
+      <div class="ro-item">
+        <span class="ro-num">3</span>
+        <div>
+          <div class="ro-title">현실적인 준비 방향</div>
+          <div class="ro-desc">전공·활동·포트폴리오·직무 현실을 학생 눈높이에 맞게 정리</div>
+        </div>
+      </div>
+      <div class="ro-item">
+        <span class="ro-num">4</span>
+        <div>
+          <div class="ro-title">다음 4주 실행 과제</div>
+          <div class="ro-desc">탐색이 상담으로 끝나지 않도록 후속 활동 체크리스트 제공</div>
+        </div>
+      </div>
+      <div class="ro-item">
+        <span class="ro-num">5</span>
+        <div>
+          <div class="ro-title">학교 제출 참고 문장</div>
+          <div class="ro-desc">진로활동 기록에 참고할 수 있는 요약 문장 제공</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오늘의 핵심 질문 -->
+  <div class="report-section">
+    <h3><i class="ti ti-question-mark"></i>오늘의 핵심 질문</h3>
+    <div class="report-box">
+      "그림 좋아한다고 다 미대 가야 하나요? 디자이너는 실제로 어떻게 사나요?"<br>
+      <span style="font-size:11.5px;color:var(--gray-400);margin-top:4px;display:inline-block">— 학생이 세션 전 입력한 가장 큰 고민</span>
+    </div>
+  </div>
+
+        <!-- 발견한 강점 -->
+        <div class="report-section">
+          <h3><i class="ti ti-sparkles"></i>발견한 강점</h3>
+          <div>
+            <span class="kchip">시각적 감각</span>
+            <span class="kchip mint">트렌드 민감도</span>
+            <span class="kchip">색감 판단력</span>
+            <span class="kchip warm">큐레이션 관점</span>
+            <span class="kchip mint">표현 욕구</span>
+          </div>
+        </div>
+
+        <!-- 멘토 피드백 -->
+        <div class="report-section">
+          <h3><i class="ti ti-message-2"></i>멘토 피드백 (김은지)</h3>
+          <div class="report-box" style="font-style:italic;color:var(--gray-600)">
+            "서연 학생은 색감과 트렌드에 대한 직관이 또래보다 한참 빨라요. 다만 '만드는 디자이너'와 '고르는 MD'가 다른 길이라는 걸 알게 되니 시야가 바로 넓어지더라구요.
+            <strong style="color:var(--navy);font-style:normal">미대가 유일한 답은 아니에요.</strong> 지금 하면 좋은 건 매주 룩북 한 권 분석하기, 그리고 친구들 옷 추천한 이유를 글로 적어보는 거예요."
+          </div>
+        </div>
+
+        <!-- 탐색 요약 -->
+        <div class="report-section">
+          <h3><i class="ti ti-map"></i>오늘 탐색한 내용</h3>
+          <div class="report-box">
+            패션 디자이너의 실제 하루 업무 루틴, 트렌드 리서치 방법, 무신사 입사 과정, 디자이너의 협업 구조(MD·바이어 등)를 탐색했습니다.
+            학생은 디자인 실무뿐 아니라 <strong style="color:var(--navy)">콘텐츠 기획·브랜딩 방향</strong>에 더 흥미를 보였으며,
+            패션 MD·바이어 직군도 적합할 수 있음을 확인했습니다.
+          </div>
+        </div>
+
+        <!-- 추천 진로/분야 -->
+        <div class="report-section">
+          <h3><i class="ti ti-route"></i>추천 진로·분야</h3>
+          <div class="report-box">
+            <strong style="color:var(--navy)">1차 추천 ·</strong> 패션 MD / 바이어<br>
+            <strong style="color:var(--navy)">2차 추천 ·</strong> 브랜드 마케터 / 콘텐츠 기획자<br>
+            <strong style="color:var(--navy)">3차 추천 ·</strong> 패션 디자이너 (전공 다각화 권장)
+          </div>
+        </div>
+
+        <!-- 다음 액션 체크리스트 -->
+        <div class="report-section">
+          <h3><i class="ti ti-list-check"></i>다음 액션 체크리스트</h3>
+          <div class="report-box" style="padding:8px 12px">
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--sky)">
+              <span>매주 룩북 1권 분석 노트 작성 (4주)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--sky)">
+              <span>친구들에게 옷 추천한 이유 글로 정리 (월 2회)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--sky)">
+              <span>패션 MD 직군 멘토 세션 예약 (2주 내 권장)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;cursor:pointer">
+              <input type="checkbox" style="accent-color:var(--sky)">
+              <span>패션 관련 학과 3곳 입학처 자료 살펴보기</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 다음 추천 멘토 미니 카드 -->
+        <div class="report-section">
+          <h3><i class="ti ti-user-plus"></i>다음 추천 멘토</h3>
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sky-l);border:1px solid var(--sky-mid);border-radius:var(--radius-sm)">
+            <div class="avatar av-mint" style="width:36px;height:36px;font-size:10px">지원</div>
+            <div style="flex:1;font-size:12.5px">
+              <div style="font-weight:700;color:var(--navy)">최지원 멘토 · 패션 MD (29CM)</div>
+              <div style="color:var(--gray-600);font-size:11.5px;margin-top:1px">"고르는 일"의 세계를 탐색 — 94% 매칭</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 학교 제출 참고용 요약 -->
+        <div class="report-section">
+          <h3 style="color:var(--warm)"><i class="ti ti-school" style="color:var(--warm)"></i>학교 제출 및 진로활동 기록 참고용 요약</h3>
+<div class="report-box" style="background:var(--cream);border-color:#FDE68A;font-size:12.5px">
+  <strong style="color:var(--navy)">[진로활동 참고 문장 · 60분]</strong><br>
+  패션 분야 현업 멘토와의 1:1 진로탐색 세션을 통해 패션 디자이너의 실제 업무 흐름, 협업 구조, 필요한 역량을 탐색함.
+  세션 과정에서 본인의 시각적 감각, 트렌드 큐레이션 역량, 표현 욕구를 확인하였으며,
+  패션 MD·브랜드 마케터 등 인접 직군으로 탐색 범위를 확장함.
+  후속 활동으로 4주간 룩북 분석 노트 작성과 스타일 추천 기록 활동을 계획함.
+</div>
+        </div>
+
+        <div class="info-box" style="margin-top:12px;margin-bottom:0">
+          <i class="ti ti-lock"></i>
+          <span>학교 제출본은 멘토 신원·세션 녹화 정보 등 민감 정보가 자동 제거된 버전입니다.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 다운로드 버튼 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn-secondary" style="font-size:13px"><i class="ti ti-download" style="color:var(--sky)"></i> 전체 PDF</button>
+      <button class="btn-secondary" style="font-size:13px"><i class="ti ti-school" style="color:var(--warm)"></i> 학교 제출용</button>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(10)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(12)">다음 단계 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S12: 다음 세션 / 패키지 제안 (강화)
+     단발 종료 방지 + 로드맵으로 교육 플랫폼 인상 강화
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s12">
+  <div class="screen-body">
+    <span class="tag tag-sky"><i class="ti ti-stars"></i>다음 활동 제안</span>
+    <div class="screen-title">탐색을 이어가세요</div>
+    <div class="screen-sub">한 번의 세션은 시작이에요. MEETOR는 <strong style="color:var(--navy)">3단계 진로 탐색 로드맵</strong>으로 함께해요.</div>
+
+    <!-- 3단계 로드맵 -->
+    <div class="roadmap">
+      <div class="roadmap-step done">
+        <div class="rs-icon"><i class="ti ti-check"></i></div>
+        <div class="rs-label">STEP 1</div>
+        <div class="rs-name">탐색</div>
+      </div>
+      <div class="roadmap-step cur">
+        <div class="rs-icon"><i class="ti ti-zoom-scan"></i></div>
+        <div class="rs-label">STEP 2 · 지금</div>
+        <div class="rs-name">심화</div>
+      </div>
+      <div class="roadmap-step">
+        <div class="rs-icon"><i class="ti ti-rocket"></i></div>
+        <div class="rs-label">STEP 3</div>
+        <div class="rs-name">실행</div>
+      </div>
+    </div>
+
+    <!-- AI 인사이트 -->
+    <div class="info-box">
+      <i class="ti ti-bulb" style="color:var(--amber)"></i>
+      <span><strong style="color:var(--navy)">AI 인사이트 ·</strong> 서연님은 패션 MD·브랜딩 쪽 관심이 새로 발견됐어요. 3회 패키지로 <em>MD → 마케터 → 크리에이터</em> 순서로 탐색하면 진로 방향이 훨씬 구체화될 거예요.</span>
+    </div>
+
+    <!-- 다음 추천 멘토 (단건) -->
+    <div class="mentor-card" style="cursor:default">
+      <div class="mentor-head">
+        <div class="avatar av-mint">지원</div>
+        <div style="flex:1">
+          <div class="mentor-name">최지원 멘토</div>
+          <div class="mentor-job">패션 MD · 29CM 바잉팀 7년차</div>
+        </div>
+        <div class="match-badge">94% 매칭</div>
+      </div>
+      <div class="mentor-reason">
+        <strong style="color:var(--navy)">왜 다음 멘토로? ·</strong> 첫 세션에서 학생이 "고르는 일"에 대한 관심을 새로 보였어요. 디자이너의 시각에 MD의 시각이 더해지면 본인 적성 윤곽이 잡힙니다.
+      </div>
+    </div>
+
+    <!-- 3회 패키지 -->
+    <div class="package-card">
+      <div class="pc-ribbon">8% 할인</div>
+      <div class="pc-title"><i class="ti ti-package" style="color:var(--sky);font-size:17px;vertical-align:-2px"></i> 진로 심화 3회 패키지</div>
+      <div class="pc-sub">탐색 → 심화 → 실행 3단계 큐레이션 멘토링</div>
+      <div class="pc-price-row">
+        <span class="pc-old">240,000원</span>
+        <span class="pc-new">220,000원</span>
+        <span class="pc-save">−20,000원</span>
+      </div>
+      <ul>
+        <li><i class="ti ti-check"></i> 60분 화상 세션 3회 (멘토 1차 선정 포함)</li>
+        <li><i class="ti ti-check"></i> 진로탐색 리포트 3회 + 종합 리포트 1회</li>
+        <li><i class="ti ti-check"></i> 학교 제출 및 진로활동 기록 참고용 요약본</li>
+        <li><i class="ti ti-check"></i> 종료 후 MEETOR 참여 확인서 예시 제공</li>
+      </ul>
+    </div>
+
+    <!-- 결과물 아카이빙 -->
+    <div class="archive-card">
+      <i class="ti ti-history"></i>
+      <div>
+        <div class="arc-title">모든 결과물은 마이페이지에 아카이빙됩니다</div>
+        <div class="arc-desc">세션 녹화, 리포트, 멘토 피드백, 체크리스트 진행 상황 — 학생이 성장하는 과정 전체가 한 곳에 쌓입니다.</div>
+      </div>
+    </div>
+
+    <!-- 학교 인증 -->
+    <div style="text-align:center;font-size:12px;color:var(--gray-600);padding:6px 0;background:var(--warm-l);border:1px solid #FDE68A;border-radius:var(--radius-md);margin-top:4px">
+      <i class="ti ti-award" style="font-size:14px;vertical-align:-2px;color:var(--warm)"></i>
+      <strong style="color:var(--navy)">3회 완료 시</strong> MEETOR 참여 확인서 예시 + 학교 제출 및 진로활동 기록 참고용 자료
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(11)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(0)">처음부터 다시 <i class="ti ti-refresh"></i></button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     S13: 서비스 전체 흐름 한눈에 보기
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s13">
+  <div class="screen-body">
+    <span class="tag tag-blue"><i class="ti ti-route"></i>서비스 구조 · 1/5</span>
+    <div class="screen-title">MEETOR 전체 흐름 한눈에 보기</div>
+    <div class="screen-sub">학생 진입부터 후속 활동까지, 서비스 구조를 빠르게 이해할 수 있도록 6단계로 정리한 데모 화면입니다.</div>
+
+<div class="flow-six">
+  <div class="flow-card"><div class="fc-num">1</div><div class="fc-icon"><i class="ti ti-robot"></i></div><div class="fc-title">AI 분석</div><div class="fc-desc">학생의 관심사·성향·질문을 분석해 진로 프로파일을 만듭니다.</div></div>
+  <div class="flow-card"><div class="fc-num">2</div><div class="fc-icon"><i class="ti ti-users"></i></div><div class="fc-title">멘토 추천</div><div class="fc-desc">전공·직무·현업 경험 기준으로 적합한 멘토를 제안합니다.</div></div>
+  <div class="flow-card"><div class="fc-num">3</div><div class="fc-icon"><i class="ti ti-shield-check"></i></div><div class="fc-title">보호자 동의</div><div class="fc-desc">미성년자 보호, 녹화 안내, 개인정보 동의를 거친 뒤 진행합니다.</div></div>
+  <div class="flow-card"><div class="fc-num">4</div><div class="fc-icon"><i class="ti ti-video"></i></div><div class="fc-title">세션</div><div class="fc-desc">질문 카드와 세션 가이드를 기반으로 1:1 탐색 대화를 진행합니다.</div></div>
+  <div class="flow-card"><div class="fc-num">5</div><div class="fc-icon"><i class="ti ti-file-analytics"></i></div><div class="fc-title">리포트</div><div class="fc-desc">대화 핵심, 느낀 점, 다음 과제를 학교 제출 참고용으로 정리합니다.</div></div>
+  <div class="flow-card"><div class="fc-num">6</div><div class="fc-icon"><i class="ti ti-list-check"></i></div><div class="fc-title">후속 활동</div><div class="fc-desc">다음 멘토, 미니 과제, 포트폴리오 활동으로 이어집니다.</div></div>
+</div>
+
+<div class="validation-card">
+  <div class="validation-head">
+    <i class="ti ti-clipboard-check"></i>
+    <div>
+      <div class="validation-title">MVP 초기 검증 계획</div>
+      <div class="validation-sub">심사 이후 바로 확인할 핵심 가설입니다.</div>
+    </div>
+  </div>
+
+  <div class="validation-grid">
+    <div class="validation-item">
+      <div class="vi-num">5명</div>
+      <div class="vi-label">학부모 인터뷰</div>
+    </div>
+    <div class="validation-item">
+      <div class="vi-num">10명</div>
+      <div class="vi-label">멘토 후보 컨택</div>
+    </div>
+    <div class="validation-item">
+      <div class="vi-num">1곳</div>
+      <div class="vi-label">학교·기관 파일럿 협의</div>
+    </div>
+    <div class="validation-item">
+      <div class="vi-num">1편</div>
+      <div class="vi-label">진로탐색 리포트 샘플</div>
+    </div>
+  </div>
+</div>
+
+<div class="info-box mint-box">
+  <i class="ti ti-sparkles"></i>
+  <span><strong style="color:var(--navy)">핵심 차별점 ·</strong> 단순 매칭이 아니라, AI 분석 → 검증 멘토 → 보호자 안심 → 산출물 기록까지 이어지는 진로탐색 운영 시스템입니다.</span>
+</div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(0)"><i class="ti ti-arrow-left"></i> 홈</button>
+    <button class="btn-primary" onclick="go(14)">가치 제안 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S14: 3자/4자 가치 제안
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s14">
+  <div class="screen-body">
+    <span class="tag tag-purple"><i class="ti ti-diamond"></i>서비스 구조 · 2/5</span>
+    <div class="screen-title">학생·학부모·멘토·학교가 모두 얻는 가치</div>
+    <div class="screen-sub">MEETOR는 한쪽만 쓰는 상담 앱이 아니라, 진로탐색 이해관계자 전체를 연결하는 플랫폼입니다.</div>
+
+    <div class="demo-grid">
+      <div class="demo-card"><div class="dc-icon"><i class="ti ti-backpack"></i></div><div class="dc-title">학생</div><div class="dc-desc">막연한 진로 고민을 현업자의 실제 이야기로 검증하고, 다음에 해볼 작은 활동을 얻습니다.</div></div>
+      <div class="demo-card"><div class="dc-icon" style="background:var(--green-l);color:var(--green)"><i class="ti ti-shield-heart"></i></div><div class="dc-title">학부모</div><div class="dc-desc">검증된 멘토, 보호자 동의, 기록 관리로 안전하게 진로 경험을 제공할 수 있습니다.</div></div>
+      <div class="demo-card"><div class="dc-icon" style="background:var(--warm-l);color:var(--warm)"><i class="ti ti-id-badge-2"></i></div><div class="dc-title">멘토</div><div class="dc-desc">검증된 학생 수요, 세션 가이드, 자동 정산, 멘토 배지로 전문성을 수익화합니다.</div></div>
+      <div class="demo-card"><div class="dc-icon" style="background:var(--purple-l);color:var(--purple)"><i class="ti ti-school"></i></div><div class="dc-title">학교·기관</div><div class="dc-desc">학생별 세션 현황, 리포트, 만족도, 출석 확인 자료를 한 화면에서 관리합니다.</div></div>
+    </div>
+
+    <div class="analysis-card">
+      <div class="ac-label"><i class="ti ti-arrows-exchange"></i>수익·운영 관점</div>
+      <div style="font-size:12.5px;color:var(--gray-600);line-height:1.7">
+        B2C는 학부모 결제형 1:1 멘토링, B2B는 학교·기관 단위 패키지 운영으로 확장할 수 있습니다. 화면의 수치와 가격은 사업 구조 설명을 위한 예시입니다.
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(13)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(15)">4회 패키지 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S15: 산출물 중심 4회 패키지
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s15">
+  <div class="screen-body">
+    <span class="tag tag-warm"><i class="ti ti-package"></i>서비스 구조 · 3/5</span>
+    <div class="screen-title">단발 상담이 아니라 결과물이 남는 4회 과정</div>
+    <div class="screen-sub">탐색 → 심화 → 실행 → 정리로 이어지는 산출물 중심 진로탐색 패키지입니다.</div>
+
+    <div class="package-four">
+      <div class="pkg-step"><div class="ps-badge"><i class="ti ti-compass"></i></div><div><div class="ps-title">1회차 · 탐색</div><div class="ps-desc">AI 프로파일과 관심 키워드를 바탕으로 직업 후보를 넓게 살펴봅니다.</div><div class="pkg-output"><span>관심 키워드</span><span>질문 리스트</span></div></div></div>
+      <div class="pkg-step"><div class="ps-badge"><i class="ti ti-zoom-in"></i></div><div><div class="ps-title">2회차 · 심화</div><div class="ps-desc">현업 멘토와 직무 현실, 전공 경로, 필요한 역량을 구체화합니다.</div><div class="pkg-output"><span>직무 이해 노트</span><span>진로 비교표</span></div></div></div>
+      <div class="pkg-step"><div class="ps-badge"><i class="ti ti-rocket"></i></div><div><div class="ps-title">3회차 · 실행</div><div class="ps-desc">학생이 직접 해볼 수 있는 미니 프로젝트와 활동 계획을 설계합니다.</div><div class="pkg-output"><span>실행 과제</span><span>활동 체크리스트</span></div></div></div>
+      <div class="pkg-step"><div class="ps-badge"><i class="ti ti-file-check"></i></div><div><div class="ps-title">4회차 · 정리</div><div class="ps-desc">탐색 과정, 배운 점, 다음 활동을 리포트로 묶어 보관·제출 참고 자료로 남깁니다.</div><div class="pkg-output"><span>종합 리포트</span><span>학교 제출 참고용 요약</span></div></div></div>
+    </div>
+
+    <div class="archive-card">
+      <i class="ti ti-archive"></i>
+      <div><div class="arc-title">산출물 아카이브</div><div class="arc-desc">회차별 리포트, 멘토 피드백, 실행 과제, 만족도 결과가 학생별 기록으로 누적됩니다.</div></div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(14)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(16)">기관 대시보드 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S16: 학교·기관용 대시보드 목업
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s16">
+  <div class="screen-body">
+    <span class="tag tag-green"><i class="ti ti-dashboard"></i>서비스 구조 · 4/5</span>
+    <div class="screen-title">학교·기관 담당자용 관리 화면</div>
+    <div class="screen-sub">학생별 진행 현황, 리포트, 만족도, 출석 확인 자료를 관리하는 B2B 목업입니다.</div>
+
+    <div class="dash-shell">
+      <div class="dash-top">
+        <div><div class="dt-title">늘봄중학교 · 진로탐색 운영 대시보드</div><div class="dt-sub">2026년 1학기 · 2학년 자유학기제 연계 예시</div></div>
+        <span class="status-pill progress">운영 중</span>
+      </div>
+      <div class="dash-metrics">
+        <div class="dash-metric"><div class="dm-num">48명</div><div class="dm-lbl">참여 학생</div></div>
+        <div class="dash-metric"><div class="dm-num">132건</div><div class="dm-lbl">완료 세션</div></div>
+        <div class="dash-metric"><div class="dm-num">4.7/5</div><div class="dm-lbl">평균 만족도</div></div>
+      </div>
+      <table class="demo-table">
+        <thead><tr><th>학생</th><th>진행</th><th>리포트</th><th>만족도</th><th>자료</th></tr></thead>
+        <tbody>
+          <tr><td>박서연</td><td><span class="status-pill done">4/4 완료</span></td><td>종합 리포트</td><td>5.0</td><td>출석 확인</td></tr>
+          <tr><td>김민준</td><td><span class="status-pill progress">2/4 진행</span></td><td>2회차</td><td>4.6</td><td>세션 로그</td></tr>
+          <tr><td>이하린</td><td><span class="status-pill wait">동의 대기</span></td><td>-</td><td>-</td><td>보호자 알림</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="demo-tabs">
+      <span class="demo-tab on">학생별 현황</span><span class="demo-tab">리포트 관리</span><span class="demo-tab">만족도</span><span class="demo-tab">출석 확인</span>
+    </div>
+    <div class="info-box">
+      <i class="ti ti-info-circle"></i>
+      <span>실제 API 연동 없이, 학교·기관 세일즈에서 보여줄 수 있는 관리 화면 컨셉만 구현한 클릭형 목업입니다.</span>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(15)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(17)">멘토 화면 보기 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     S17: 멘토 참여/관리 화면
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s17">
+  <div class="screen-body">
+    <span class="tag tag-mint"><i class="ti ti-id-badge-2"></i>서비스 구조 · 5/5</span>
+    <div class="screen-title">멘토가 MEETOR에 참여할 이유</div>
+    <div class="screen-sub">멘토 입장에서도 안정적인 수요, 운영 도구, 신뢰 장치가 있어야 플랫폼이 지속됩니다.</div>
+
+    <div class="analysis-hero" style="margin-bottom:14px">
+      <div class="ah-eyebrow">MENTOR CENTER</div>
+      <div class="ah-title">김은지 멘토 · 인증 멘토 배지</div>
+      <div class="ah-sub">검증된 학생/보호자 요청 · 이번 달 예정 세션 12건 · 정산 예정 640,000원</div>
+    </div>
+
+    <div class="mentor-benefit-list">
+      <div class="mentor-benefit"><i class="ti ti-shield-check"></i><div class="mbt">검증된 학생/보호자</div><div class="mbd">보호자 동의와 플랫폼 내 소통으로 안전한 세션만 진행합니다.</div></div>
+      <div class="mentor-benefit"><i class="ti ti-calendar-time"></i><div class="mbt">일정 관리</div><div class="mbd">가능 시간, 예약, 리마인드를 한 화면에서 관리합니다.</div></div>
+      <div class="mentor-benefit"><i class="ti ti-cash"></i><div class="mbt">자동 정산</div><div class="mbd">세션 완료 기준으로 정산 예정 금액과 내역을 확인합니다.</div></div>
+      <div class="mentor-benefit"><i class="ti ti-notes"></i><div class="mbt">세션 가이드</div><div class="mbd">학생별 질문 카드와 회차별 진행 가이드를 제공합니다.</div></div>
+      <div class="mentor-benefit"><i class="ti ti-video-plus"></i><div class="mbt">녹화 기록</div><div class="mbd">분쟁 예방과 리포트 생성을 위한 세션 기록을 보관합니다.</div></div>
+      <div class="mentor-benefit"><i class="ti ti-award"></i><div class="mbt">인증 멘토 배지</div><div class="mbd">신원·경력 검증을 통과한 멘토에게 신뢰 배지를 제공합니다.</div></div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-head"><div class="sh-mentor">이번 주 세션 큐</div><div class="sh-meta">데모 데이터 · 실제 예약/정산 연동 없음</div></div>
+      <div class="summary-body">
+        <div class="summary-row"><span class="sr-label">화 20:00</span><span class="sr-value">패션 디자이너 직무 Q&A</span></div>
+        <div class="summary-row"><span class="sr-label">목 19:30</span><span class="sr-value">포트폴리오 피드백</span></div>
+        <div class="summary-row"><span class="sr-label">토 11:00</span><span class="sr-value">4회차 종합 정리</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(16)"><i class="ti ti-arrow-left"></i> 이전</button>
+    <button class="btn-primary" onclick="go(1)">학생 신청 데모 시작 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     S18: 멘토 리스트 더 보기
+     ════════════════════════════════════════════════════════ -->
+<div class="screen" id="s18">
+  <div class="screen-body">
+    <span class="tag tag-amber"><i class="ti ti-list-search"></i>멘토 리스트</span>
+    <div class="screen-title">관심 분야별 멘토를 자유롭게 둘러보기</div>
+    <div class="screen-sub">AI 추천 Top 3 외에도 분야·경력·상담 주제 기준으로 멘토를 탐색할 수 있는 화면입니다.</div>
+
+    <div class="mentor-list-head">
+      <div>
+        <div class="mlh-title" id="mentorListTitle">전체 멘토 25명</div>
+        <div class="mlh-sub">프로파일 매칭 + 운영자 검수 + 보호자 안심 기준 반영</div>
+      </div>
+      <span class="status-pill progress" id="mentorListCount">10명 표시</span>
+    </div>
+
+    <div class="mentor-filter-row" id="mentorFilters"></div>
+    <div class="mentor-compact-list" id="mentorListBody"></div>
+
+    <div class="pagination-row">
+      <button class="page-btn" id="mentorPrevBtn" onclick="moveMentorPage(-1)"><i class="ti ti-chevron-left"></i> 이전</button>
+      <div class="page-indicator" id="mentorPageIndicator">1 / 3</div>
+      <button class="page-btn" id="mentorNextBtn" onclick="moveMentorPage(1)">다음 <i class="ti ti-chevron-right"></i></button>
+    </div>
+
+    <div class="info-box">
+      <i class="ti ti-info-circle"></i>
+      <span>멘토 카드를 누르면 선택 상태가 바뀌고, 이후 결제 요약 화면의 선택 멘토명도 함께 변경되는 데모 흐름입니다.</span>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-secondary" onclick="go(5)"><i class="ti ti-arrow-left"></i> 추천 Top 3</button>
+    <button class="btn-primary" onclick="go(6)">선택한 멘토로 진행 <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+/* ════════════════════════════════════════════════════════
+   화면 흐름 정의
+   ════════════════════════════════════════════════════════ */
+
+// 메인 진행 단계 (프로그레스 트랙용)
+// s0~s1: 온보딩 (트랙 미표시)
+// s2~s3: 진단
+// s4: AI 분석
+// s5: 매칭
+// s6: 안심확인
+// s7: 결제
+// s8~s9: 세션
+// s10: 분석중
+// s11: 리포트
+// s12: 다음활동
+const STEPS = ['진단','AI 분석','매칭','안심확인','결제','세션','리포트','다음 활동'];
+
+// 화면 인덱스 → 프로그레스 스텝 인덱스 매핑
+// (-1은 트랙에 표시하지 않음 = 랜딩/연령확인)
+const SCREEN_TO_STEP = {
+  0: -1,  // 랜딩
+  1: -1,  // 연령확인
+  2: 0,   // 진단 1/3
+  3: 0,   // 진단 2/3
+  4: 1,   // AI 분석
+  5: 2,   // 매칭
+  6: 3,   // 안심확인
+  7: 4,   // 결제
+  8: 5,   // 화상
+  9: 5,   // 채팅
+  10: 5,  // 분석중 (세션 직후이므로 세션 단계에 묶음)
+  11: 6,  // 리포트
+  12: 7,  // 다음 활동
+  13: -1, // 서비스 전체 흐름
+  14: -1, // 가치 제안
+  15: -1, // 4회 패키지
+  16: -1, // 학교·기관 대시보드
+  17: -1, // 멘토 참여/관리
+  18: -1  // 멘토 리스트 더 보기
+};
+
+const TOTAL_SCREENS = 19;
+const FLOW_SCREENS = [0,1,2,3,4,5,6,7,8,9,10,11,12];
+let cur = 0;
+let quickNavCollapsed = false;
+let selectedMentorId = 1;
+const mentorMap = {
+  1: '김은지 멘토 · 패션 디자이너',
+  2: '최지원 멘토 · 패션 MD',
+  3: '박준혁 멘토 · 패션 콘텐츠 크리에이터'
+};
+
+/* 출생연도/월 셀렉트 초기화 */
+(function initBirth() {
+  const y = document.getElementById('birthYear');
+  const m = document.getElementById('birthMonth');
+  for (let yr = 2024; yr >= 2006; yr--) y.innerHTML += `<option value="${yr}">${yr}년</option>`;
+  for (let mo = 1; mo <= 12; mo++) m.innerHTML += `<option value="${mo}">${mo}월</option>`;
+})();
+
+const QUICK_NAV = [
+  {n:0, label:'홈'}, {n:13, label:'전체 흐름'}, {n:14, label:'가치 제안'},
+  {n:2, label:'학생 진입'}, {n:4, label:'AI 분석'}, {n:5, label:'멘토 추천'},
+  {n:18, label:'멘토 리스트'}, {n:6, label:'보호자 동의'}, {n:8, label:'세션'},
+  {n:11, label:'리포트'}, {n:12, label:'후속 활동'}, {n:16, label:'기관 대시보드'}, {n:17, label:'멘토 관리'}
+];
+
+const MENTOR_CATEGORIES = ['전체','패션/디자인','콘텐츠','공학·개발','데이터/AI','의료·바이오','경영/마케팅','교육/심리'];
+const MENTOR_LIST = [
+  {id:101,name:'김은지',job:'패션 디자이너 · 무신사 크리에이티브팀 5년차',cat:'패션/디자인',match:98,status:'예약가능',tone:'av-sky',tags:['패션 디자인','포트폴리오','미대 진학']},
+  {id:102,name:'최지원',job:'패션 MD · 29CM 바잉팀 7년차',cat:'패션/디자인',match:91,status:'오늘가능',tone:'av-mint',tags:['패션 MD','트렌드 분석','브랜드 바잉']},
+  {id:103,name:'박준혁',job:'패션 콘텐츠 크리에이터 · 브랜드 협업 120건',cat:'콘텐츠',match:85,status:'예약가능',tone:'av-navy',tags:['영상 편집','SNS 성장','수익화']},
+  {id:104,name:'이하나',job:'UX/UI 디자이너 · 커머스 앱 디자인 6년차',cat:'패션/디자인',match:82,status:'예약가능',tone:'av-pur',tags:['UX/UI','피그마','비전공 진입']},
+  {id:105,name:'정민수',job:'브랜드 마케터 · 패션 스타트업 4년차',cat:'경영/마케팅',match:78,status:'마감임박',tone:'av-amr',tags:['브랜딩','캠페인','스타트업']},
+  {id:106,name:'한지우',job:'프론트엔드 개발자 · 에듀테크 서비스 6년차',cat:'공학·개발',match:89,status:'예약가능',tone:'av-green',tags:['웹 개발','React','서비스 개발']},
+  {id:107,name:'오세훈',job:'로봇공학 엔지니어 · 제조 자동화 9년차',cat:'공학·개발',match:84,status:'예약가능',tone:'av-navy',tags:['로봇','자동화','공학 진로']},
+  {id:108,name:'윤다은',job:'AI 리서처 · 자연어처리 스타트업 5년차',cat:'데이터/AI',match:88,status:'오늘가능',tone:'av-pur',tags:['AI','파이썬','연구직']},
+  {id:109,name:'문태경',job:'데이터 분석가 · 커머스 데이터팀 7년차',cat:'데이터/AI',match:81,status:'예약가능',tone:'av-sky',tags:['데이터 분석','SQL','진로 과제']},
+  {id:110,name:'강소라',job:'제품 디자이너 · SaaS 프로덕트 8년차',cat:'패션/디자인',match:79,status:'예약가능',tone:'av-mint',tags:['제품 디자인','UX 리서치','포트폴리오']},
+  {id:111,name:'장우진',job:'게임 클라이언트 개발자 · Unity 6년차',cat:'공학·개발',match:87,status:'마감임박',tone:'av-green',tags:['Unity','게임 개발','포트폴리오']},
+  {id:112,name:'서민재',job:'백엔드 개발자 · 핀테크 플랫폼 8년차',cat:'공학·개발',match:83,status:'예약가능',tone:'av-navy',tags:['서버 개발','API','클라우드']},
+  {id:113,name:'노하영',job:'영상 PD · 교육 콘텐츠 제작 10년차',cat:'콘텐츠',match:80,status:'예약가능',tone:'av-amr',tags:['영상 기획','촬영','편집']},
+  {id:114,name:'백유리',job:'일러스트레이터 · 출판/굿즈 협업 작가',cat:'패션/디자인',match:77,status:'오늘가능',tone:'av-pur',tags:['일러스트','작가 활동','굿즈']},
+  {id:115,name:'신도윤',job:'임베디드 엔지니어 · 전장 SW 7년차',cat:'공학·개발',match:76,status:'예약가능',tone:'av-sky',tags:['전자공학','임베디드','자동차']},
+  {id:116,name:'배서연',job:'간호사 · 대학병원 응급실 6년차',cat:'의료·바이오',match:74,status:'예약가능',tone:'av-green',tags:['간호학과','병원 생활','의료 진로']},
+  {id:117,name:'고현우',job:'바이오 연구원 · 신약개발 연구소 5년차',cat:'의료·바이오',match:73,status:'마감임박',tone:'av-mint',tags:['생명과학','연구원','대학원']},
+  {id:118,name:'유채린',job:'심리상담사 · 청소년 상담센터 9년차',cat:'교육/심리',match:72,status:'오늘가능',tone:'av-pur',tags:['심리학','상담사','대학 진학']},
+  {id:119,name:'임준서',job:'교사 · 중학교 진로교육 담당 11년차',cat:'교육/심리',match:71,status:'예약가능',tone:'av-navy',tags:['교직','진로교육','학습 계획']},
+  {id:120,name:'차민영',job:'퍼포먼스 마케터 · 앱 성장팀 6년차',cat:'경영/마케팅',match:75,status:'예약가능',tone:'av-amr',tags:['광고','데이터 마케팅','성장 전략']},
+  {id:121,name:'권태윤',job:'창업가 · AI 학습관리 서비스 공동창업',cat:'경영/마케팅',match:70,status:'마감임박',tone:'av-sky',tags:['창업','사업 기획','팀 빌딩']},
+  {id:122,name:'홍예린',job:'콘텐츠 에디터 · 매거진/브랜드 채널 5년차',cat:'콘텐츠',match:69,status:'예약가능',tone:'av-mint',tags:['글쓰기','에디팅','브랜드 콘텐츠']},
+  {id:123,name:'남기훈',job:'클라우드 엔지니어 · 인프라 운영 8년차',cat:'공학·개발',match:68,status:'예약가능',tone:'av-green',tags:['클라우드','DevOps','보안']},
+  {id:124,name:'전수빈',job:'데이터 사이언티스트 · 추천시스템 6년차',cat:'데이터/AI',match:86,status:'오늘가능',tone:'av-pur',tags:['머신러닝','추천시스템','수학']},
+  {id:125,name:'마지훈',job:'산업디자이너 · 생활가전 디자인 9년차',cat:'패션/디자인',match:67,status:'예약가능',tone:'av-amr',tags:['산업디자인','제품 개발','스케치']}
+];
+MENTOR_LIST.forEach(m => mentorMap[m.id] = `${m.name} 멘토 · ${m.job.split('·')[0].trim()}`);
+let mentorPage = 1;
+let mentorFilter = '전체';
+const MENTORS_PER_PAGE = 10;
+
+/* 네비게이션 렌더 */
+function renderNav(n) {
+  const dotIndex = FLOW_SCREENS.indexOf(n);
+  const dotWrap = document.getElementById('stepDots');
+  const isAux = SCREEN_TO_STEP[n] === -1 && n >= 13;
+  dotWrap.style.visibility = isAux ? 'hidden' : 'visible';
+  dotWrap.innerHTML = FLOW_SCREENS.map((screenNo, i) =>
+    `<div class="dot${i===dotIndex?' on':''}"></div>`
+  ).join('');
+
+  const quickWrap = document.getElementById('quickNavWrap');
+  quickWrap.classList.toggle('collapsed', quickNavCollapsed);
+  document.getElementById('quickNavToggle').textContent = quickNavCollapsed ? '펼치기' : '숨기기';
+
+  document.getElementById('quickNav').innerHTML = QUICK_NAV.map(item =>
+    `<button class="${item.n===n?'on':''}" onclick="go(${item.n})">${item.label}</button>`
+  ).join('');
+
+  const currentStep = SCREEN_TO_STEP[n];
+  if (currentStep === -1) {
+    document.getElementById('progTrack').style.display = 'none';
+  } else {
+    document.getElementById('progTrack').style.display = 'flex';
+    document.getElementById('progTrack').innerHTML = STEPS.map((s, i) => {
+      const target = [2,4,5,6,7,8,11,12][i];
+      return `<div class="prog-step${i<currentStep?' done':i===currentStep?' cur':''}" onclick="go(${target})" style="cursor:pointer">${s}</div>`;
+    }).join('');
+  }
+}
+
+function toggleQuickNav() {
+  quickNavCollapsed = !quickNavCollapsed;
+  renderNav(cur);
+}
+
+function getInitials(name) {
+  return name.length >= 2 ? name.slice(-2) : name;
+}
+
+function statusClass(status) {
+  if (status === '오늘가능') return 'ok';
+  if (status === '마감임박') return 'soon';
+  return '';
+}
+
+function setMentorFilter(cat) {
+  mentorFilter = cat;
+  mentorPage = 1;
+  renderMentorList();
+}
+
+function moveMentorPage(delta) {
+  const total = Math.max(1, Math.ceil(getFilteredMentors().length / MENTORS_PER_PAGE));
+  mentorPage = Math.min(total, Math.max(1, mentorPage + delta));
+  renderMentorList();
+}
+
+function getFilteredMentors() {
+  return mentorFilter === '전체' ? MENTOR_LIST : MENTOR_LIST.filter(m => m.cat === mentorFilter);
+}
+
+function renderMentorList() {
+  const filterEl = document.getElementById('mentorFilters');
+  const listEl = document.getElementById('mentorListBody');
+  if (!filterEl || !listEl) return;
+
+  filterEl.innerHTML = MENTOR_CATEGORIES.map(cat =>
+    `<button class="${cat===mentorFilter?'on':''}" onclick="setMentorFilter('${cat}')">${cat}</button>`
+  ).join('');
+
+  const filtered = getFilteredMentors();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / MENTORS_PER_PAGE));
+  mentorPage = Math.min(mentorPage, totalPages);
+  const start = (mentorPage - 1) * MENTORS_PER_PAGE;
+  const pageItems = filtered.slice(start, start + MENTORS_PER_PAGE);
+
+  document.getElementById('mentorListTitle').textContent = `${mentorFilter} 멘토 ${filtered.length}명`;
+  document.getElementById('mentorListCount').textContent = `${pageItems.length}명 표시`;
+  document.getElementById('mentorPageIndicator').textContent = `${mentorPage} / ${totalPages}`;
+  document.getElementById('mentorPrevBtn').disabled = mentorPage === 1;
+  document.getElementById('mentorNextBtn').disabled = mentorPage === totalPages;
+
+  listEl.innerHTML = pageItems.map(m => `
+    <div class="mentor-compact-card${selectedMentorId===m.id?' sel':''}" id="mc${m.id}" onclick="selectMentor(${m.id})">
+      <div class="avatar ${m.tone}">${getInitials(m.name)}</div>
+      <div class="mentor-compact-main">
+        <div class="mentor-compact-top">
+          <div class="mentor-compact-name">${m.name} 멘토</div>
+          <span class="availability-pill ${statusClass(m.status)}">${m.status}</span>
+        </div>
+        <div class="mentor-compact-job">${m.job}</div>
+        <div class="mentor-mini-tags">${m.tags.map(t => `<span>${t}</span>`).join('')}</div>
+      </div>
+      <div class="mentor-side">
+        <div class="match-mini">${m.match}%</div>
+        <div class="availability-pill">${m.cat}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* 화면 전환 */
+function go(n) {
+  const prev = document.getElementById('s'+cur);
+  if (prev) prev.classList.remove('active');
+  cur = n;
+  const next = document.getElementById('s'+cur);
+  if (next) next.classList.add('active');
+  renderNav(n);
+  document.querySelector('.app').scrollIntoView({behavior:'smooth', block:'start'});
+
+  // 분석 중 화면 진입 시 단계별 진행 시뮬레이션
+  if (n === 10) startAnalysisAnimation();
+  if (n === 18) renderMentorList();
+}
+
+/* 연령 확인 로직 */
+function checkAge() {
+  const y = document.getElementById('birthYear').value;
+  const m = document.getElementById('birthMonth').value;
+  if (!y || !m) { alert('출생 연도와 월을 선택해주세요.'); return; }
+  const birth = new Date(parseInt(y), parseInt(m)-1, 1);
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  if (now.getMonth() < birth.getMonth()) age--;
+  if (age > 18) {
+    alert('MEETOR는 만 18세 이하 청소년을 위한 서비스입니다.\n성인 대상 서비스는 준비 중이에요.');
+    return;
+  }
+  go(2);
+}
+
+/* 자기소개 → AI 분석으로 전환 (간단한 로딩 인상 후 결과로) */
+function startAnalysis() {
+  // 실제 분석 흐름은 S4(결과 화면)에서 trait-bar 애니메이션으로 표현됨
+  go(4);
+}
+
+/* 멘토 선택 */
+function selectMentor(n) {
+  selectedMentorId = n;
+  document.querySelectorAll('.mentor-card, .mentor-compact-card').forEach(card => {
+    card.classList.toggle('sel', card.id === 'mc' + n);
+  });
+  const el = document.getElementById('paySummaryMentor');
+  if (el && mentorMap[n]) el.textContent = mentorMap[n];
+  renderMentorList();
+}
+
+/* 동의 체크 */
+function checkConsent() {
+  const unchecked = ['c1','c2','c3'].filter(id => !document.getElementById(id).checked);
+  if (unchecked.length > 0) {
+    alert('필수 동의 항목을 모두 체크해주세요.');
+    return;
+  }
+  go(8);
+}
+
+/* 화상 세션 - 질문 카드 5종 */
+const questions = {
+  1: '이 일을 시작하게 된 계기는 무엇이었어요?',
+  2: '하루 일과는 보통 어떻게 흘러가나요?',
+  3: '학생 때 미리 준비해두면 좋은 것은 무엇이 있을까요?',
+  4: '이 직업의 현실적인 어려움도 알고 싶어요.',
+  5: '지금 바로 해볼 수 있는 작은 과제 하나 추천해주세요!'
+};
+function setQ(n) {
+  document.getElementById('qNum').textContent = n;
+  document.getElementById('qBody').textContent = questions[n];
+  document.querySelectorAll('.qcard-nav button').forEach((b, i) =>
+    b.classList.toggle('active', i+1 === n)
+  );
+}
+
+/* 리포트 분석 중 단계 애니메이션 */
+let analyzeTimer = null;
+function startAnalysisAnimation() {
+  if (analyzeTimer) clearInterval(analyzeTimer);
+  const items = document.querySelectorAll('#analyzeList .analyze-item');
+  let step = 2; // 이미 2개는 done 상태
+  // 현재 진행중인 항목부터 순차적으로 done 처리
+  analyzeTimer = setInterval(() => {
+    if (step >= items.length) {
+      clearInterval(analyzeTimer);
+      return;
+    }
+    // 현재 cur → done
+    items[step].classList.remove('cur');
+    items[step].classList.add('done');
+    items[step].querySelector('.ai-icon').innerHTML = '<i class="ti ti-check"></i>';
+    // 다음 항목을 cur로
+    step++;
+    if (step < items.length) {
+      items[step].classList.add('cur');
+      items[step].querySelector('.ai-icon').innerHTML = '<i class="ti ti-dots"></i>';
+    }
+  }, 1500);
+}
+
+/* 채팅 빠른 전송 */
+function quickSend(txt) {
+  document.getElementById('chatInput').value = txt;
+  sendChat();
+}
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  const area = document.getElementById('chatArea');
+  const name = document.getElementById('studentName').value.trim() || '박서연';
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;justify-content:flex-end';
+  wrap.innerHTML = `<div><div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;text-align:right">${name}</div><div style="background:var(--navy);color:#fff;padding:9px 12px;border-radius:12px 0 12px 12px;font-size:13px;max-width:260px;line-height:1.5">${txt}</div></div>`;
+  area.appendChild(wrap);
+  inp.value = '';
+  area.scrollTop = area.scrollHeight;
+
+  setTimeout(() => {
+    const rep = document.createElement('div');
+    rep.style.cssText = 'display:flex;align-items:flex-end;gap:8px';
+    rep.innerHTML = `<div class="avatar av-sky" style="width:28px;height:28px;font-size:10px;flex-shrink:0">은지</div><div><div style="font-size:11px;color:var(--gray-400);margin-bottom:3px">김은지 멘토</div><div style="background:var(--gray-100);border:1px solid var(--gray-200);padding:9px 12px;border-radius:0 12px 12px 12px;font-size:13px;max-width:260px;line-height:1.5;color:var(--gray-800)">좋은 질문이에요! 현장에서 직접 경험한 이야기를 해드릴게요. 😊</div></div>`;
+    area.appendChild(rep);
+    area.scrollTop = area.scrollHeight;
+  }, 900);
+}
+
+/* 칩 인터랙션 */
+document.querySelectorAll('#gradeChips .chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('#gradeChips .chip').forEach(x => x.classList.remove('sel'));
+    c.classList.add('sel');
+  });
+});
+document.querySelectorAll('#interestChips .chip:not(.dontknow)').forEach(c =>
+  c.addEventListener('click', () => c.classList.toggle('sel'))
+);
+
+/* 닉네임 → 분석/리포트에 반영 */
+document.getElementById('studentName').addEventListener('input', e => {
+  const v = e.target.value.trim() || '박서연';
+  const profileEl = document.getElementById('profileName');
+  if (profileEl) profileEl.textContent = v + ' · 중2 · 진로 프로파일';
+  const reportEl = document.getElementById('reportName');
+  if (reportEl) reportEl.textContent = v + ' · 패션 디자이너 진로탐색';
+});
+
+/* 초기 렌더 */
+renderNav(0);
+renderMentorList();
+</script>
+</body>
+</html>
